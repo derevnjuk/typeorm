@@ -28,23 +28,34 @@ export class CascadesSubjectBuilder {
             .forEach(([relation, relationEntity, relationEntityMetadata]) => {
 
                 // we need only defined values and insert or update cascades of the relation should be set
-                if (relationEntity === undefined ||
-                    relationEntity === null ||
-                    (!relation.isCascadeInsert && !relation.isCascadeUpdate))
+                if (!(relation.isCascadeRemove || relation.isCascadeUpdate || relation.isCascadeInsert))
                     return;
+
+                if (relationEntity === undefined ||
+                    relationEntity === null) {
+                    const relationEntitySubject = new Subject({
+                        metadata: relationEntityMetadata,
+                        parentSubject: subject,
+                        entity: undefined,
+                        mustBeRemoved: relation.isCascadeRemove
+                    });
+                    this.allSubjects.push(relationEntitySubject);
+                    return;
+                }
 
                 // if relation entity is just a relation id set (for example post.tag = 1)
                 // then we don't really need to check cascades since there is no object to insert or update
                 if (!(relationEntity instanceof Object))
                     return;
 
+
                 // if we already has this entity in list of operated subjects then skip it to avoid recursion
                 const alreadyExistRelationEntitySubject = this.findByPersistEntityLike(relationEntityMetadata.target, relationEntity);
                 if (alreadyExistRelationEntitySubject) {
-                    if (alreadyExistRelationEntitySubject.canBeInserted === false) // if its not marked for insertion yet
-                        alreadyExistRelationEntitySubject.canBeInserted = relation.isCascadeInsert === true;
-                    if (alreadyExistRelationEntitySubject.canBeUpdated === false) // if its not marked for update yet
-                        alreadyExistRelationEntitySubject.canBeUpdated = relation.isCascadeUpdate === true;
+                    if (!alreadyExistRelationEntitySubject.canBeInserted) // if its not marked for insertion yet
+                        alreadyExistRelationEntitySubject.canBeInserted = relation.isCascadeInsert;
+                    if (!alreadyExistRelationEntitySubject.canBeUpdated) // if its not marked for update yet
+                        alreadyExistRelationEntitySubject.canBeUpdated = relation.isCascadeUpdate;
                     return;
                 }
 
@@ -54,8 +65,8 @@ export class CascadesSubjectBuilder {
                     metadata: relationEntityMetadata,
                     parentSubject: subject,
                     entity: relationEntity,
-                    canBeInserted: relation.isCascadeInsert === true,
-                    canBeUpdated: relation.isCascadeUpdate === true
+                    canBeInserted: relation.isCascadeInsert,
+                    canBeUpdated: relation.isCascadeUpdate
                 });
                 this.allSubjects.push(relationEntitySubject);
 

@@ -36,7 +36,7 @@ export class OneToOneInverseSideSubjectBuilder {
 
                 // we don't need owning relations, this operation is only for inverse side of one-to-one relations
                 // skip relations for which persistence is disabled
-                if (relation.isOwning || relation.persistenceEnabled === false)
+                if (relation.isOwning || !relation.persistenceEnabled)
                     return;
 
                 this.buildForSubjectRelation(subject, relation);
@@ -83,7 +83,7 @@ export class OneToOneInverseSideSubjectBuilder {
                 const removedRelatedEntitySubject = new Subject({
                     metadata: relation.inverseEntityMetadata,
                     parentSubject: subject,
-                    canBeUpdated: true,
+                    mustBeRemoved: relation.isCascadeRemove,
                     identifier: relatedEntityDatabaseRelationId,
                     changeMaps: [{
                         relation: relation.inverseRelation!,

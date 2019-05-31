@@ -36,7 +36,7 @@ export class OneToManySubjectBuilder {
             subject.metadata.oneToManyRelations.forEach(relation => {
 
                 // skip relations for which persistence is disabled
-                if (relation.persistenceEnabled === false)
+                if (!relation.persistenceEnabled)
                     return;
 
                 this.buildForSubjectRelation(subject, relation);
@@ -165,7 +165,7 @@ export class OneToManySubjectBuilder {
                 const removedRelatedEntitySubject = new Subject({
                     metadata: relation.inverseEntityMetadata,
                     parentSubject: subject,
-                    canBeUpdated: true,
+                    mustBeRemoved: relation.isCascadeRemove,
                     identifier: removedRelatedEntityRelationId,
                     changeMaps: [{
                         relation: relation.inverseRelation!,
