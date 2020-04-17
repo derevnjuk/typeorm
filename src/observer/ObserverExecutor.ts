@@ -51,7 +51,7 @@ export class ObserverExecutor {
         // if something new is inserted - we never know if that matches original query
         // so we execute query again and emit event if we find something new
         if (observer.type === "find") {
-            await observer.connection.manager.find(observer.metadata.target as any, observer.options as any).then(entities => {
+            await observer.connection.manager.find<ObjectLiteral>(observer.metadata.target as any, observer.options as any).then(entities => {
                 const newEntities = this.findInserted(observer.metadata, entities, observer.lastEmitEntities);
                 if (newEntities) {
                     observer.lastEmitEntities = newEntities;
@@ -60,12 +60,12 @@ export class ObserverExecutor {
             });
 
         } else if (observer.type === "findOne") {
-            await observer.connection.manager.findOne(observer.metadata.target as any, observer.options as any).then(entity => {
+            await observer.connection.manager.findOne<ObjectLiteral>(observer.metadata.target as any, observer.options as any).then(entity => {
                 if (!entity || !observer.lastEmitEntity) {
                     if (entity === undefined && observer.lastEmitEntity === undefined) {
                         return;
                     }
-                    observer.lastEmitEntity = entity;
+                    observer.lastEmitEntity = entity ;
                     observer.subscriptionObserver.next(observer.lastEmitEntity);
                     return;
                 }
@@ -77,7 +77,7 @@ export class ObserverExecutor {
             });
 
         } else if (observer.type === "findAndCount") {
-            await observer.connection.manager.findAndCount(observer.metadata.target as any, observer.options as any).then(([entities, count]) => {
+            await observer.connection.manager.findAndCount<ObjectLiteral>(observer.metadata.target as any, observer.options as any).then(([entities, count]) => {
                 const newEntities = this.findInserted(observer.metadata, entities, observer.lastEmitEntities);
                 if (newEntities || count !== observer.lastEmitCount) {
                     if (newEntities)
@@ -140,7 +140,7 @@ export class ObserverExecutor {
 
         if (observer.type === "find") {
             await observer.connection.manager
-                .find(observer.metadata.target as any, observer.options as any)
+                .find<ObjectLiteral>(observer.metadata.target as any, observer.options as any)
                 .then(entities => {
                     const hasChanges = entities.some(entity => this.hasChanges(observer, entity));
                     if (hasChanges || entities.length !== observer.lastEmitEntities.length) {
@@ -151,7 +151,7 @@ export class ObserverExecutor {
 
         } else if (observer.type === "findOne") {
             await observer.connection.manager
-                .findOne(observer.metadata.target as any, observer.options as any)
+                .findOne<ObjectLiteral>(observer.metadata.target as any, observer.options as any)
                 .then(entity => {
                     if (!entity) {
                         observer.lastEmitEntity = undefined;
@@ -164,7 +164,7 @@ export class ObserverExecutor {
 
         } else if (observer.type === "findAndCount") {
             await observer.connection.manager
-                .findAndCount(observer.metadata.target as any, observer.options as any)
+                .findAndCount<ObjectLiteral>(observer.metadata.target as any, observer.options as any)
                 .then(([entities, count]) => {
 
                     const hasChanges = entities.some(entity => this.hasChanges(observer, entity));
@@ -263,7 +263,7 @@ export class ObserverExecutor {
                 if (!observer.lastEmitEntities.length && !observer.lastEmitCount)
                     return;
 
-                await observer.connection.manager.find(observer.metadata.target as any, observer.options as any).then(entities => {
+                await observer.connection.manager.find<ObjectLiteral>(observer.metadata.target as any, observer.options as any).then(entities => {
 
                     // if we have any new entity emit a new event
                     if (this.hasRemoved(observer, entities)) {
@@ -276,7 +276,7 @@ export class ObserverExecutor {
                 if (!observer.lastEmitEntities.length && !observer.lastEmitCount)
                     return;
 
-                await observer.connection.manager.findAndCount(observer.metadata.target as any, observer.options as any).then(([entities, count]) => {
+                await observer.connection.manager.findAndCount<ObjectLiteral>(observer.metadata.target as any, observer.options as any).then(([entities, count]) => {
 
                     // if we have any new entity emit a new event
                     if (this.hasRemoved(observer, entities) || observer.lastEmitCount !== count) {
@@ -290,7 +290,7 @@ export class ObserverExecutor {
                 if (!observer.lastEmitEntity)
                     return;
 
-                await observer.connection.manager.findOne(observer.metadata.target as any, observer.options as any).then(entity => {
+                await observer.connection.manager.findOne<ObjectLiteral>(observer.metadata.target as any, observer.options as any).then(entity => {
                     if (!entity) {
                         observer.lastEmitEntity = undefined;
                         observer.subscriptionObserver.next(observer.lastEmitEntity);

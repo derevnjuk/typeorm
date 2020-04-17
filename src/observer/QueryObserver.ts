@@ -67,7 +67,7 @@ export class QueryObserver {
             // we find entities matching our query
             switch (this.type) {
                 case "find":
-                    this.connection.manager.find(this.metadata.target as any, this.options as any).then(entities => {
+                    this.connection.manager.find<ObjectLiteral>(this.metadata.target as any, this.options as any).then(entities => {
                         subscriptionObserver.next(entities);
                         this.lastEmitEntities = entities;
                         this.connection.subscribers.push(this.subscriber);
@@ -75,7 +75,7 @@ export class QueryObserver {
                     break;
 
                 case "findOne":
-                    this.connection.manager.findOne(this.metadata.target as any, this.options as any).then(entity => {
+                    this.connection.manager.findOne<ObjectLiteral>(this.metadata.target as any, this.options as any).then(entity => {
                         subscriptionObserver.next(entity);
                         this.lastEmitEntity = entity;
                         this.connection.subscribers.push(this.subscriber);
@@ -83,7 +83,7 @@ export class QueryObserver {
                     break;
 
                 case "findAndCount":
-                    this.connection.manager.findAndCount(this.metadata.target as any, this.options as any).then(([entities, count]) => {
+                    this.connection.manager.findAndCount<ObjectLiteral>(this.metadata.target as any, this.options as any).then(([entities, count]) => {
                         subscriptionObserver.next([entities, count]);
                         this.lastEmitCount = count;
                         this.lastEmitEntities = entities;

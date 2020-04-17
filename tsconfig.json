@@ -1,17 +1,14 @@
 {
   "compilerOptions": {
-    "lib": [
-      "es6"
-    ],
     "outDir": "build/compiled",
-    "target": "es6",
+    "target": "ES2017",
     "module": "commonjs",
     "moduleResolution": "node",
     "importHelpers": true,
+    "skipLibCheck": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "sourceMap": true,
-    "skipLibCheck": true,
     "noImplicitAny": true,
     "declaration": true,
     "noFallthroughCasesInSwitch": true,
@@ -19,11 +16,11 @@
     "stripInternal": true,
     "pretty": true,
     "strictNullChecks": true,
-    "noUnusedLocals": true,
-    "downlevelIteration": true
+    "noUnusedLocals": true
   },
   "exclude": [
     "tmp",
+    "test",
     "temp",
     "build",
     "node_modules"

@@ -204,6 +204,11 @@ export type FindOptions<E> = {
     options?: FindExtraOptions;
 
     /**
+     * Enables or disables query result caching.
+     */
+    lock?: { mode: "optimistic", version: number | Date } | { mode: "pessimistic_read" | "pessimistic_write" | "dirty_read" };
+
+    /**
      * Offset (paginated) where from entities should be taken.
      */
     skip?: number;
