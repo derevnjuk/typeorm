@@ -22,6 +22,7 @@ import {OracleDriver} from "../driver/oracle/OracleDriver";
 import {UpdateValuesMissingError} from "../error/UpdateValuesMissingError";
 import {EntityColumnNotFound} from "../error/EntityColumnNotFound";
 import {QueryDeepPartialEntity} from "./QueryPartialEntity";
+import {ColumnMetadata} from '../metadata/ColumnMetadata';
 
 /**
  * Allows to build complex sql queries in a fashion way and execute those queries.
@@ -377,6 +378,7 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
 
         // prepare columns and values to be updated
         const updateColumnAndValues: string[] = [];
+        const updatedColumns: ColumnMetadata[] = [];
         const newParameters: ObjectLiteral = {};
         let parametersCount =   this.connection.driver instanceof MysqlDriver ||
                                 this.connection.driver instanceof OracleDriver ||
@@ -392,6 +394,8 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 }
 
                 columns.forEach(column => {
+                    if (column.isReadonly) { return; }
+                    updatedColumns.push(column);
 
                     // skip weird cases when we send wrong relations in update map
                     if (column.relationMetadata &&
@@ -449,9 +453,9 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 });
             });
 
-            if (metadata.versionColumn)
+            if (metadata.versionColumn && updatedColumns.indexOf(metadata.versionColumn) === -1)
                 updateColumnAndValues.push(this.escape(metadata.versionColumn.databaseName) + " = " + this.escape(metadata.versionColumn.databaseName) + " + 1");
-            if (metadata.updateDateColumn)
+            if (metadata.updateDateColumn && updatedColumns.indexOf(metadata.updateDateColumn) === -1)
                 updateColumnAndValues.push(this.escape(metadata.updateDateColumn.databaseName) + " = CURRENT_TIMESTAMP"); // todo: fix issue with CURRENT_TIMESTAMP(6) being used, can "DEFAULT" be used?!
 
         } else {
