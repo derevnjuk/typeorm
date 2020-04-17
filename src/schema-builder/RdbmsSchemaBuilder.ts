@@ -18,7 +18,7 @@ import {MysqlDriver} from "../driver/mysql/MysqlDriver";
 import {TableUnique} from "./table/TableUnique";
 import {TableCheck} from "./table/TableCheck";
 import {TableExclusion} from "./table/TableExclusion";
-import {ForeignKeyMetadata} from '../metadata/ForeignKeyMetadata';
+import {ForeignKeyMetadata} from "../metadata/ForeignKeyMetadata";
 
 /**
  * Creates complete tables schemas in the database based on the entity metadatas.

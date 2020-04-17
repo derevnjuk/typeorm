@@ -155,6 +155,7 @@ describe("repository > basic methods", () => {
 
         it("should create a new empty object if entity schema is used", () => connections.forEach(connection => {
             const repository = connection.getRepository("User");
+            // @ts-ignore
             repository.create().should.be.eql({});
         }));
 

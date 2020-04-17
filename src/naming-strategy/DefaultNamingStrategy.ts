@@ -31,7 +31,7 @@ export class DefaultNamingStrategy implements NamingStrategyInterface {
         const finalPropertyName: string = customName ? customName : propertyName;
 
         return embeddedPrefixes.length
-            ? camelCase(embeddedPrefixes.join('_')) +
+            ? camelCase(embeddedPrefixes.join("_")) +
             pascalCase(finalPropertyName)
             : propertyName;
     }

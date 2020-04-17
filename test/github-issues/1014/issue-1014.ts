@@ -24,6 +24,7 @@ describe("github issues > #1014 Transaction doesn't rollback", () => {
         try {
             await connection.transaction(manager => {
                 return PromiseUtils.settle([
+                    // @ts-ignore
                     manager.remove(TestEntity, { id: 1 }),
                     Promise.reject(new Error()),
                     new Promise((resolve, reject) => reject(new Error())),

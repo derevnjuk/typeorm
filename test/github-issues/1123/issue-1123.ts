@@ -57,7 +57,8 @@ describe("github issues > #1123 load relation eagerly by setting isEager propert
           .disableEagerRelations()
           .getOne();
 
-        loadedPost!.should.be.eql({
+        // @ts-ignore
+          loadedPost!.should.be.eql({
           id: 1,
           title: "Post 1"
         });

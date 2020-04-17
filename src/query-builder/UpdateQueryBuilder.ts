@@ -22,7 +22,7 @@ import {OracleDriver} from "../driver/oracle/OracleDriver";
 import {UpdateValuesMissingError} from "../error/UpdateValuesMissingError";
 import {EntityColumnNotFound} from "../error/EntityColumnNotFound";
 import {QueryDeepPartialEntity} from "./QueryPartialEntity";
-import {ColumnMetadata} from '../metadata/ColumnMetadata';
+import {ColumnMetadata} from "../metadata/ColumnMetadata";
 
 /**
  * Allows to build complex sql queries in a fashion way and execute those queries.
