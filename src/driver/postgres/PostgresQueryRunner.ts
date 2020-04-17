@@ -177,7 +177,8 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
                     } else {
                         switch (result.command) {
                             case "DELETE":
-                                // for DELETE query additionally return number of affected rows
+                            case "UPDATE":
+                                // for UPDATE and DELETE query additionally return number of affected rows
                                 ok([result.rows, result.rowCount]);
                                 break;
                             default:
@@ -1334,8 +1335,8 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
             `"ns"."nspname" AS "referenced_table_schema", "cl"."relname" AS "referenced_table_name", "att"."attname" AS "referenced_column_name", "con"."confdeltype" AS "on_delete", ` +
             `"con"."confupdtype" AS "on_update", "con"."condeferrable" AS "deferrable", "con"."condeferred" AS "deferred" ` +
             `FROM ( ` +
-            `SELECT UNNEST ("con1"."conkey") AS "parent", UNNEST ("con1"."confkey") AS "child", "con1"."confrelid", "con1"."conrelid", "con1"."conname", "con1"."contype", "ns"."nspname", ` + 
-            `"cl"."relname", "con1"."condeferrable", ` + 
+            `SELECT UNNEST ("con1"."conkey") AS "parent", UNNEST ("con1"."confkey") AS "child", "con1"."confrelid", "con1"."conrelid", "con1"."conname", "con1"."contype", "ns"."nspname", ` +
+            `"cl"."relname", "con1"."condeferrable", ` +
             `CASE WHEN "con1"."condeferred" THEN 'INITIALLY DEFERRED' ELSE 'INITIALLY IMMEDIATE' END as condeferred, ` +
             `CASE "con1"."confdeltype" WHEN 'a' THEN 'NO ACTION' WHEN 'r' THEN 'RESTRICT' WHEN 'c' THEN 'CASCADE' WHEN 'n' THEN 'SET NULL' WHEN 'd' THEN 'SET DEFAULT' END as "confdeltype", ` +
             `CASE "con1"."confupdtype" WHEN 'a' THEN 'NO ACTION' WHEN 'r' THEN 'RESTRICT' WHEN 'c' THEN 'CASCADE' WHEN 'n' THEN 'SET NULL' WHEN 'd' THEN 'SET DEFAULT' END as "confupdtype" ` +
