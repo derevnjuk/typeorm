@@ -88,68 +88,45 @@ export class SubjectExecutor {
      * Executes queries using given query runner.
      */
     async execute(): Promise<void> {
-        // console.time("SubjectExecutor.execute");
-
         // broadcast "before" events before we start insert / update / remove operations
         let broadcasterResult: BroadcasterResult | undefined = undefined;
         if (!this.options || this.options.listeners !== false) {
-            // console.time(".broadcastBeforeEventsForAll");
             broadcasterResult = this.broadcastBeforeEventsForAll();
             if (broadcasterResult.promises.length > 0) await Promise.all(broadcasterResult.promises);
-            // console.timeEnd(".broadcastBeforeEventsForAll");
         }
 
         // since event listeners and subscribers can call save methods and/or trigger entity changes we need to recompute operational subjects
         // recompute only in the case if any listener or subscriber was really executed
         if (broadcasterResult && broadcasterResult.count > 0) {
-            // console.time(".recompute");
             this.insertSubjects.forEach(subject => subject.recompute());
             this.updateSubjects.forEach(subject => subject.recompute());
             this.removeSubjects.forEach(subject => subject.recompute());
             this.recompute();
-            // console.timeEnd(".recompute");
         }
 
+        // make sure our remove subjects are sorted (using topological sorting) when multiple entities are passed for the removal
+        this.removeSubjects = new SubjectTopoligicalSorter(this.removeSubjects).sort("delete");
+        await this.executeRemoveOperations();
+
         // make sure our insert subjects are sorted (using topological sorting) to make cascade inserts work properly
-
-        // console.timeEnd("prepare");
-
         // execute all insert operations
-        // console.time(".insertion");
         this.insertSubjects = new SubjectTopoligicalSorter(this.insertSubjects).sort("insert");
         await this.executeInsertOperations();
-        // console.timeEnd(".insertion");
 
         // recompute update operations since insertion can create updation operations for the
         // properties it wasn't able to handle on its own (referenced columns)
         this.updateSubjects = this.allSubjects.filter(subject => subject.mustBeUpdated);
-
         // execute update operations
-        // console.time(".updation");
         await this.executeUpdateOperations();
-        // console.timeEnd(".updation");
-
-        // make sure our remove subjects are sorted (using topological sorting) when multiple entities are passed for the removal
-        // console.time(".SubjectTopoligicalSorter");
-        this.removeSubjects = new SubjectTopoligicalSorter(this.removeSubjects).sort("delete");
-        // console.timeEnd(".SubjectTopoligicalSorter");
-        // console.time(".removal");
-        await this.executeRemoveOperations();
-        // console.timeEnd(".removal");
 
         // update all special columns in persisted entities, like inserted id or remove ids from the removed entities
-        // console.time(".updateSpecialColumnsInPersistedEntities");
         await this.updateSpecialColumnsInPersistedEntities();
-        // console.timeEnd(".updateSpecialColumnsInPersistedEntities");
 
         // finally broadcast "after" events after we finish insert / update / remove operations
         if (!this.options || this.options.listeners !== false) {
-            // console.time(".broadcastAfterEventsForAll");
             broadcasterResult = this.broadcastAfterEventsForAll();
             if (broadcasterResult.promises.length > 0) await Promise.all(broadcasterResult.promises);
-            // console.timeEnd(".broadcastAfterEventsForAll");
         }
-        // console.timeEnd("SubjectExecutor.execute");
     }
 
     // -------------------------------------------------------------------------
