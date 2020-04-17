@@ -12,6 +12,18 @@ export function camelCase(str: string, firstCapital: boolean = false): string {
 }
 
 /**
+ *
+ * Converts string into pascal-case.
+ */
+export function pascalCase(str: string): string {
+    return str.replace(
+        /(\w)(\w*)/g,
+        (_g0: string, g1: string, g2: string) =>
+            g1.toUpperCase() + this.camelCase(g2)
+    );
+}
+
+/**
  * Converts string into snake-case.
  *
  * @see https://regex101.com/r/QeSm2I/1

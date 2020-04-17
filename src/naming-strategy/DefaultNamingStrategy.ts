@@ -1,6 +1,6 @@
 import {NamingStrategyInterface} from "./NamingStrategyInterface";
 import {RandomGenerator} from "../util/RandomGenerator";
-import {camelCase, snakeCase, titleCase} from "../util/StringUtils";
+import {camelCase, snakeCase, pascalCase} from "../util/StringUtils";
 import {Table} from "../schema-builder/table/Table";
 
 /**
@@ -27,11 +27,13 @@ export class DefaultNamingStrategy implements NamingStrategyInterface {
         return originalClosureTableName + "_closure";
     }
 
-    columnName(propertyName: string, customName: string, embeddedPrefixes: string[]): string { // todo: simplify
-        if (embeddedPrefixes.length)
-            return camelCase(embeddedPrefixes.join("_")) + (customName ? titleCase(customName) : titleCase(propertyName));
+    columnName(propertyName: string, customName: string, embeddedPrefixes: string[]): string {
+        const finalPropertyName: string = customName ? customName : propertyName;
 
-        return customName ? customName : propertyName;
+        return embeddedPrefixes.length
+            ? camelCase(embeddedPrefixes.join('_')) +
+            pascalCase(finalPropertyName)
+            : propertyName;
     }
 
     relationName(propertyName: string): string {
