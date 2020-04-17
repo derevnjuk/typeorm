@@ -18,6 +18,7 @@ import {MysqlDriver} from "../driver/mysql/MysqlDriver";
 import {TableUnique} from "./table/TableUnique";
 import {TableCheck} from "./table/TableCheck";
 import {TableExclusion} from "./table/TableExclusion";
+import {ForeignKeyMetadata} from '../metadata/ForeignKeyMetadata';
 
 /**
  * Creates complete tables schemas in the database based on the entity metadatas.
@@ -162,7 +163,7 @@ export class RdbmsSchemaBuilder implements SchemaBuilder {
 
             // find foreign keys that exist in the schemas but does not exist in the entity metadata
             const tableForeignKeysToDrop = table.foreignKeys.filter(tableForeignKey => {
-                const metadataFK = metadata.foreignKeys.find(metadataForeignKey => metadataForeignKey.name === tableForeignKey.name);
+                const metadataFK = metadata.foreignKeys.find(metadataForeignKey => this.foreignKeysMatch(tableForeignKey, metadataForeignKey));
                 return !metadataFK
                     || (metadataFK.onDelete && metadataFK.onDelete !== tableForeignKey.onDelete)
                     || (metadataFK.onUpdate && metadataFK.onUpdate !== tableForeignKey.onUpdate);
@@ -578,7 +579,7 @@ export class RdbmsSchemaBuilder implements SchemaBuilder {
                 return;
 
             const newKeys = metadata.foreignKeys.filter(foreignKey => {
-                return !table.foreignKeys.find(dbForeignKey => dbForeignKey.name === foreignKey.name);
+                return !table.foreignKeys.find(dbForeignKey => this.foreignKeysMatch(dbForeignKey, foreignKey));
             });
             if (newKeys.length === 0)
                 return;
@@ -666,4 +667,10 @@ export class RdbmsSchemaBuilder implements SchemaBuilder {
         return columns.map(columnMetadata => TableUtils.createTableColumnOptions(columnMetadata, this.connection.driver));
     }
 
+    private foreignKeysMatch(
+        tableForeignKey: TableForeignKey, metadataForeignKey: ForeignKeyMetadata
+    ): boolean {
+        return (tableForeignKey.name === metadataForeignKey.name)
+            && (tableForeignKey.referencedTableName === metadataForeignKey.referencedTablePath);
+    }
 }
