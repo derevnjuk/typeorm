@@ -73,28 +73,50 @@ export class SubjectChangedColumnsComputer {
                 let normalizedValue = entityValue;
                 // normalize special values to make proper comparision
                 if (entityValue !== null) {
-                    if (column.type === "date") {
+                    switch (column.type) {
+                    case "date":
                         normalizedValue = DateUtils.mixedDateToDateString(entityValue);
+                        break;
 
-                    } else if (column.type === "time") {
+                    case "time":
+                    case "time with time zone":
+                    case "time without time zone":
+                    case "timetz":
                         normalizedValue = DateUtils.mixedDateToTimeString(entityValue);
+                        break;
 
-                    } else if (column.type === "datetime" || column.type === Date) {
+                    case "datetime":
+                    case "datetime2":
+                    case Date:
+                    case "timestamp":
+                    case "timestamp without time zone":
+                    case "timestamp with time zone":
+                    case "timestamp with local time zone":
+                    case "timestamptz":
                         normalizedValue = DateUtils.mixedDateToUtcDatetimeString(entityValue);
                         databaseValue = DateUtils.mixedDateToUtcDatetimeString(databaseValue);
+                        break;
 
-                    } else if (column.type === "json" || column.type === "jsonb" || column.type === "simple-json") {
+                    case "json":
+                    case "jsonb":
                         // JSON.stringify doesn't work because postgresql sorts jsonb before save.
                         // If you try to save json '[{"messages": "", "attribute Key": "", "level":""}] ' as jsonb,
                         // then postgresql will save it as '[{"level": "", "message":"", "attributeKey": ""}]'
                         if (OrmUtils.deepCompare(entityValue, databaseValue)) return;
+                        break;
 
-                    } else if (column.type === "simple-array") {
+                    case "simple-array":
                         normalizedValue = DateUtils.simpleArrayToString(entityValue);
                         databaseValue = DateUtils.simpleArrayToString(databaseValue);
-                    } else if (column.type === "simple-enum") {
+                        break;
+                    case "simple-enum":
                         normalizedValue = DateUtils.simpleEnumToString(entityValue);
                         databaseValue = DateUtils.simpleEnumToString(databaseValue);
+                        break;
+                    case "simple-json":
+                        normalizedValue = DateUtils.simpleJsonToString(entityValue);
+                        databaseValue = DateUtils.simpleJsonToString(databaseValue);
+                        break;
                     }
                 }
 
