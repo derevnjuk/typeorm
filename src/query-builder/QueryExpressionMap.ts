@@ -48,6 +48,16 @@ export class QueryExpressionMap {
     selects: SelectQuery[] = [];
 
     /**
+     * Whether SELECT is DISTINCT.
+     */
+    selectDistinct: boolean = false;
+
+    /**
+     * SELECT DISTINCT ON query (postgres).
+     */
+    selectDistinctOn: string[] = [];
+
+    /**
      * FROM-s to be selected.
      */
     // froms: { target: string, alias: string }[] = [];
@@ -384,6 +394,8 @@ export class QueryExpressionMap {
         const map = new QueryExpressionMap(this.connection);
         map.queryType = this.queryType;
         map.selects = this.selects.map(select => select);
+        map.selectDistinct = this.selectDistinct;
+        map.selectDistinctOn = this.selectDistinctOn;
         this.aliases.forEach(alias => map.aliases.push(new Alias(alias)));
         map.mainAlias = this.mainAlias;
         map.valuesSet = this.valuesSet;

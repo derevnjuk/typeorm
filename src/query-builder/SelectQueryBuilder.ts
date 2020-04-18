@@ -201,6 +201,22 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
     }
 
     /**
+     * Sets whether the selection is DISTINCT.
+     */
+    distinct(distinct: boolean = true): this {
+        this.expressionMap.selectDistinct = distinct;
+        return this;
+    }
+
+    /**
+     * Sets the distinct on clause for Postgres.
+     */
+    distinctOn(distinctOn: string[]): this {
+        this.expressionMap.selectDistinctOn = distinctOn;
+        return this;
+    }
+
+    /**
      * Specifies FROM which entity's table select/update/delete will be executed.
      * Also sets a main string alias of the selection data.
      * Removes all previously set from-s.
@@ -1484,8 +1500,30 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
 
                 return this.getTableName(alias.tablePath!) + " " + this.escape(alias.name);
             });
+        const select = this.createSelectDistinctExpression();
         const selection = allSelects.map(select => select.selection + (select.aliasName ? " AS " + this.escape(select.aliasName) : "")).join(", ");
-        return "SELECT " + selection + " FROM " + froms.join(", ") + lock;
+        return select + selection + " FROM " + froms.join(", ") + lock;
+    }
+
+    /**
+     * Creates select | select distinct part of SQL query.
+     */
+    protected createSelectDistinctExpression(): string {
+        const {selectDistinct, selectDistinctOn} = this.expressionMap;
+        const {driver} = this.connection;
+
+        let select = "SELECT ";
+        if (driver instanceof PostgresDriver && selectDistinctOn.length > 0) {
+            const selectDistinctOnMap = selectDistinctOn.map(
+                (on) => this.replacePropertyNames(on)
+            ).join(", ");
+
+            select = `SELECT DISTINCT ON (${selectDistinctOnMap}) `;
+        } else if (selectDistinct) {
+            select = "SELECT DISTINCT ";
+        }
+
+        return select;
     }
 
     /**
