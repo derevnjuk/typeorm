@@ -353,16 +353,18 @@ export abstract class QueryBuilder<Entity> {
         const parameters: ObjectLiteral = Object.assign({}, this.expressionMap.parameters);
 
         // add discriminator column parameter if it exist
-        if (this.expressionMap.mainAlias && this.expressionMap.mainAlias.hasMetadata) {
-            const metadata = this.expressionMap.mainAlias!.metadata;
-            if (metadata.discriminatorColumn && metadata.parentEntityMetadata) {
-                const values = metadata.childEntityMetadatas
-                    .filter(childMetadata => childMetadata.discriminatorColumn)
-                    .map(childMetadata => childMetadata.discriminatorValue);
-                values.push(metadata.discriminatorValue);
-                parameters["discriminatorColumnValues"] = values;
+        this.expressionMap.aliases?.forEach((alias) => {
+            if (alias && alias.hasMetadata) {
+                const metadata = alias.metadata;
+                if (metadata.discriminatorColumn && metadata.parentEntityMetadata) {
+                    const values = metadata.childEntityMetadatas
+                        .filter(childMetadata => childMetadata.discriminatorColumn)
+                        .map(childMetadata => childMetadata.discriminatorValue);
+                    values.push(metadata.discriminatorValue);
+                    parameters["discriminatorColumnValues"] = values;
+                }
             }
-        }
+        });
 
         return parameters;
     }
