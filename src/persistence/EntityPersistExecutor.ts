@@ -1,5 +1,4 @@
 import {ObjectLiteral} from "../common/ObjectLiteral";
-import {ObserverExecutor} from "../observer/ObserverExecutor";
 import {SaveOptions} from "../repository/SaveOptions";
 import {RemoveOptions} from "../repository/RemoveOptions";
 import {MustBeEntityError} from "../error/MustBeEntityError";
@@ -64,8 +63,6 @@ export class EntityPersistExecutor {
                 const entities: ObjectLiteral[] = this.entity instanceof Array ? this.entity : [this.entity];
                 const entitiesInChunks = this.options && this.options.chunk && this.options.chunk > 0 ? OrmUtils.chunk(entities, this.options.chunk) : [entities];
 
-                // console.log("entitiesInChunks", entitiesInChunks);
-                // console.time("building subject executors...");
                 const executors = await Promise.all(entitiesInChunks.map(async entities => {
                     const subjects: Subject[] = [];
 
@@ -84,7 +81,6 @@ export class EntityPersistExecutor {
                         }));
                     });
 
-                    // console.time("building cascades...");
                     // go through each entity with metadata and create subjects and subjects by cascades for them
                     const cascadesSubjectBuilder = new CascadesSubjectBuilder(subjects);
                     subjects.forEach(subject => {
@@ -92,15 +88,11 @@ export class EntityPersistExecutor {
                         // these subjects are subjects that we need to insert or update alongside with main persisted entity
                         cascadesSubjectBuilder.build(subject);
                     });
-                    // console.timeEnd("building cascades...");
 
                     // load database entities for all subjects we have
                     // next step is to load database entities for all operate subjects
-                    // console.time("loading...");
                     await new SubjectDatabaseEntityLoader(queryRunner, subjects).load(this.mode);
-                    // console.timeEnd("loading...");
 
-                    // console.time("other subjects...");
                     // build all related subjects and change maps
                     if (this.mode === "save") {
                         new OneToManySubjectBuilder(subjects).build();
@@ -113,14 +105,10 @@ export class EntityPersistExecutor {
                             }
                         });
                     }
-                    // console.timeEnd("other subjects...");
-                    // console.timeEnd("building subjects...");
-                    // console.log("subjects", subjects);
 
                     // create a subject executor
                     return new SubjectExecutor(queryRunner, subjects, this.options);
                 }));
-                // console.timeEnd("building subject executors...");
 
                 // make sure we have at least one executable operation before we create a transaction and proceed
                 // if we don't have operations it means we don't really need to update or remove something
@@ -143,24 +131,12 @@ export class EntityPersistExecutor {
                     }
 
                     // execute all persistence operations for all entities we have
-                    // console.time("executing subject executors...");
                     await PromiseUtils.runInSequence(executorsWithExecutableOperations, executor => executor.execute());
-                    // console.timeEnd("executing subject executors...");
 
                     // commit transaction if it was started by us
-                    // console.time("commit");
-                    // console.log("committing");
-                    if (isTransactionStartedByUs === true) {
-                        // console.log("committing oh yeah");
+                    if (isTransactionStartedByUs) {
                         await queryRunner.commitTransaction();
-
-                        // console.log("dispatching", this.connection.observers);
-                        // console.time("dispatching");
-                        await new ObserverExecutor(this.connection.observers).execute();
-                        // console.timeEnd("dispatching");
-                        // console.log("dispatched");
                     }
-                    // console.timeEnd("commit");
 
                 } catch (error) {
 

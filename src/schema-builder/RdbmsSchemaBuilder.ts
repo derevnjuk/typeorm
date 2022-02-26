@@ -244,7 +244,7 @@ export class RdbmsSchemaBuilder implements SchemaBuilder {
                 .filter(tableIndex => {
                     const indexMetadata = metadata.indices.find(index => index.name === tableIndex.name);
                     if (indexMetadata) {
-                        if (indexMetadata.synchronize === false)
+                        if (!indexMetadata.synchronize)
                             return false;
 
                         if (indexMetadata.isUnique !== tableIndex.isUnique)
@@ -490,7 +490,7 @@ export class RdbmsSchemaBuilder implements SchemaBuilder {
                 return;
 
             const newIndices = metadata.indices
-                .filter(indexMetadata => !table.indices.find(tableIndex => tableIndex.name === indexMetadata.name) && indexMetadata.synchronize === true)
+                .filter(indexMetadata => !table.indices.find(tableIndex => tableIndex.name === indexMetadata.name) && indexMetadata.synchronize)
                 .map(indexMetadata => TableIndex.create(indexMetadata));
 
             if (newIndices.length === 0)

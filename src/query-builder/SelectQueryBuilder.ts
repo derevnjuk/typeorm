@@ -1,5 +1,4 @@
 import {normalizeFindOptions} from "../find-options/FindOptionsUtils";
-import {ObserverExecutor} from "../observer/ObserverExecutor";
 import {QueryBuilderUtils} from "./QueryBuilderUtils";
 import {RawSqlResultsToEntityTransformer} from "./transformer/RawSqlResultsToEntityTransformer";
 import {ObjectLiteral} from "../common/ObjectLiteral";
@@ -14,7 +13,9 @@ import {RelationCountAttribute} from "./relation-count/RelationCountAttribute";
 import {RelationIdLoader} from "./relation-id/RelationIdLoader";
 import {RelationIdMetadataToAttributeTransformer} from "./relation-id/RelationIdMetadataToAttributeTransformer";
 import {RelationCountLoader} from "./relation-count/RelationCountLoader";
-import {RelationCountMetadataToAttributeTransformer} from "./relation-count/RelationCountMetadataToAttributeTransformer";
+import {
+    RelationCountMetadataToAttributeTransformer
+} from "./relation-count/RelationCountMetadataToAttributeTransformer";
 import {QueryBuilder} from "./QueryBuilder";
 import {ReadStream} from "../platform/PlatformTools";
 import {LockNotSupportedOnGivenDriverError} from "../error/LockNotSupportedOnGivenDriverError";
@@ -37,7 +38,8 @@ import {BroadcasterResult} from "../subscriber/BroadcasterResult";
 import {SelectQueryBuilderOption} from "./SelectQueryBuilderOption";
 import {
     FindOptions,
-    FindOptionsOrder, FindOptionsRelation,
+    FindOptionsOrder,
+    FindOptionsRelation,
     FindOptionsSelect,
     FindOptionsWhere
 } from "../find-options/FindOptions";
@@ -1063,7 +1065,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         try {
 
             // start transaction if it was enabled
-            if (this.expressionMap.useTransaction === true && queryRunner.isTransactionActive === false) {
+            if (this.expressionMap.useTransaction && !queryRunner.isTransactionActive) {
                 await queryRunner.startTransaction();
                 transactionStartedByUs = true;
             }
@@ -1073,8 +1075,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1105,7 +1105,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         try {
 
             // start transaction if it was enabled
-            if (this.expressionMap.useTransaction === true && queryRunner.isTransactionActive === false) {
+            if (this.expressionMap.useTransaction && !queryRunner.isTransactionActive) {
                 await queryRunner.startTransaction();
                 transactionStartedByUs = true;
             }
@@ -1117,8 +1117,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1188,7 +1186,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         try {
 
             // start transaction if it was enabled
-            if (this.expressionMap.useTransaction === true && queryRunner.isTransactionActive === false) {
+            if (this.expressionMap.useTransaction && !queryRunner.isTransactionActive) {
                 await queryRunner.startTransaction();
                 transactionStartedByUs = true;
             }
@@ -1200,8 +1198,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1235,7 +1231,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         try {
 
             // start transaction if it was enabled
-            if (this.expressionMap.useTransaction === true && queryRunner.isTransactionActive === false) {
+            if (this.expressionMap.useTransaction && !queryRunner.isTransactionActive) {
                 await queryRunner.startTransaction();
                 transactionStartedByUs = true;
             }
@@ -1250,8 +1246,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1283,7 +1277,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         try {
 
             // start transaction if it was enabled
-            if (this.expressionMap.useTransaction === true && queryRunner.isTransactionActive === false) {
+            if (this.expressionMap.useTransaction && !queryRunner.isTransactionActive) {
                 await queryRunner.startTransaction();
                 transactionStartedByUs = true;
             }
@@ -1298,8 +1292,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1372,7 +1364,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
      * Disables eager relations.
      */
     disableEagerRelations(disabled: boolean = true) {
-        this.expressionMap.eagerRelations = disabled === true ? false : true;
+        this.expressionMap.eagerRelations = !disabled;
         return this;
     }
 
@@ -1416,7 +1408,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             }
 
         } else {
-            let subQuery: string = "";
+            let subQuery: string;
             if (entityOrProperty instanceof Function) {
                 const subQueryBuilder: SelectQueryBuilder<any> = (entityOrProperty as any)(((this as any) as SelectQueryBuilder<any>).subQuery());
                 this.setParameters(subQueryBuilder.getParameters());
@@ -1429,8 +1421,8 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             joinAttribute.alias = this.expressionMap.createAlias({
                 type: "join",
                 name: aliasName,
-                tablePath: isSubQuery === false ? entityOrProperty as string : undefined,
-                subQuery: isSubQuery === true ? subQuery : undefined,
+                tablePath: !isSubQuery ? entityOrProperty as string : undefined,
+                subQuery: isSubQuery ? subQuery : undefined,
             });
         }
     }
@@ -1580,7 +1572,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 const junctionTableName = relation.junctionEntityMetadata!.tablePath;
 
                 const junctionAlias = joinAttr.junctionAlias;
-                let junctionCondition = "", destinationCondition = "";
+                let junctionCondition: string, destinationCondition: string;
 
                 if (relation.isOwning) {
 
@@ -1774,7 +1766,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
 
         const columns: ColumnMetadata[] = [];
         if (hasMainAlias) {
-            columns.push(...metadata.columns.filter(column => column.isSelect === true));
+            columns.push(...metadata.columns.filter(column => column.isSelect));
         }
         columns.push(...metadata.columns.filter(column => {
             return this.expressionMap.selects.some(select => select.selection === aliasName + "." + column.propertyPath);
@@ -1807,7 +1799,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 selection: selectionPath,
                 aliasName: selection && selection.aliasName ? selection.aliasName : DriverUtils.buildColumnAlias(this.connection.driver, aliasName, column.databaseName),
                 // todo: need to keep in mind that custom selection.aliasName breaks hydrator. fix it later!
-                virtual: selection ? selection.virtual === true : (hasMainAlias ? false : true),
+                virtual: selection ? selection.virtual === true : (!hasMainAlias),
             };
         });
     }
@@ -1898,7 +1890,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 });
             }
 
-            if (this.expressionMap.eagerRelations === true) {
+            if (this.expressionMap.eagerRelations) {
                 if (!this.findOptions.options || this.findOptions.options.eagerRelations !== false) {
                     // Create a list of all of the alias+propertyPaths that were manually joined, so we don't join them again
                     const manuallyJoinedRelations = this.expressionMap.joinAttributes
@@ -1924,9 +1916,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 if (this.findOptions.options.listeners === false)
                     this.callListeners(false);
 
-                if (this.findOptions.options.observers === false)
-                    this.callObservers(false);
-
                 if (this.findOptions.options.loadRelationIds === true) {
                     this.loadAllRelationIds();
 
@@ -1944,7 +1933,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         const metadata = this.expressionMap.mainAlias!.metadata;
 
         const distinctAlias = this.escape(mainAlias);
-        let countSql: string = "";
+        let countSql: string;
         if (metadata.hasMultiplePrimaryKeys) {
             if (this.connection.driver instanceof AbstractSqliteDriver) {
                 countSql = `COUNT(DISTINCT(` + metadata.primaryColumns.map((primaryColumn, index) => {
@@ -2011,7 +2000,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         const relationCountMetadataTransformer = new RelationCountMetadataToAttributeTransformer(this.expressionMap);
         relationCountMetadataTransformer.transform();
 
-        let rawResults: any[] = [], entities: any[] = [];
+        let rawResults: any[], entities: any[] = [];
 
         // for pagination enabled (e.g. skip and take) its much more complicated - its a special process
         // where we make two queries to find the data we need
@@ -2055,7 +2044,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 .getRawMany();
 
             if (rawResults.length > 0) {
-                let condition = "";
+                let condition: string;
                 const parameters: ObjectLiteral = {};
                 if (metadata.hasMultiplePrimaryKeys) {
                     condition = rawResults.map((result, index) => {
@@ -2083,9 +2072,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             }
 
         } else {
-            // console.time("load raw results");
             rawResults = await this.loadRawResults(queryRunner);
-            // console.timeEnd("load raw results");
         }
 
         if (rawResults.length > 0) {
@@ -2094,12 +2081,10 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             const rawRelationIdResults = await relationIdLoader.load(rawResults);
             const rawRelationCountResults = await relationCountLoader.load(rawResults);
             const transformer = new RawSqlResultsToEntityTransformer(this.expressionMap, this.connection.driver, rawRelationIdResults, rawRelationCountResults, this.queryRunner);
-            // console.time("transforming entities");
             entities = transformer.transform(rawResults, this.expressionMap.mainAlias!);
-            // console.timeEnd("transforming entities");
 
             // broadcast all "after load" events
-            if (this.expressionMap.callListeners === true && this.expressionMap.mainAlias.hasMetadata) {
+            if (this.expressionMap.callListeners && this.expressionMap.mainAlias.hasMetadata) {
                 const broadcastResult = new BroadcasterResult();
                 queryRunner.broadcaster.broadcastLoadEventsForAll(broadcastResult, this.expressionMap.mainAlias.metadata, entities);
                 if (broadcastResult.promises.length > 0) await Promise.all(broadcastResult.promises);

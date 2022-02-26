@@ -205,7 +205,7 @@ export class CockroachDriver implements Driver {
     constructor(connection: Connection) {
         this.connection = connection;
         this.options = connection.options as CockroachConnectionOptions;
-        this.isReplicated = this.options.replication ? true : false;
+        this.isReplicated = !!this.options.replication;
 
         // load postgres package
         this.loadDependencies();
@@ -332,7 +332,7 @@ export class CockroachDriver implements Driver {
             value = parseInt(value);
 
         } else if (columnMetadata.type === Boolean) {
-            value = value ? true : false;
+            value = !!value;
 
         } else if (columnMetadata.type === "datetime"
             || columnMetadata.type === Date
@@ -476,7 +476,7 @@ export class CockroachDriver implements Driver {
             return "" + defaultValue;
 
         } else if (typeof defaultValue === "boolean") {
-            return defaultValue === true ? "true" : "false";
+            return defaultValue ? "true" : "false";
 
         } else if (typeof defaultValue === "function") {
             return defaultValue();

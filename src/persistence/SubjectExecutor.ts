@@ -261,9 +261,8 @@ export class SubjectExecutor {
                         .insert()
                         .into(subjects[0].metadata.target)
                         .values(bulkInsertMaps)
-                        .updateEntity(this.options && this.options.reload === false ? false : true)
+                        .updateEntity(!(this.options && this.options.reload === false))
                         .callListeners(false)
-                        .callObservers(false)
                         .execute();
 
                     bulkInsertSubjects.forEach((subject, index) => {
@@ -288,9 +287,8 @@ export class SubjectExecutor {
                             .insert()
                             .into(subject.metadata.target)
                             .values(subject.insertedValueSet)
-                            .updateEntity(this.options && this.options.reload === false ? false : true)
+                            .updateEntity(!(this.options && this.options.reload === false))
                             .callListeners(false)
-                            .callObservers(false)
                             .execute()
                             .then(insertResult => {
                                 subject.identifier = insertResult.identifiers[0];
@@ -363,9 +361,8 @@ export class SubjectExecutor {
                     .createQueryBuilder()
                     .update(subject.metadata.target)
                     .set(updateMap)
-                    .updateEntity(this.options && this.options.reload === false ? false : true)
-                    .callListeners(false)
-                    .callObservers(false);
+                    .updateEntity(!(this.options && this.options.reload === false))
+                    .callListeners(false);
 
                 if (subject.entity) {
                     updateQueryBuilder.whereEntity(subject.identifier);
@@ -437,7 +434,6 @@ export class SubjectExecutor {
                     .from(subjects[0].metadata.target)
                     .where(deleteMaps)
                     .callListeners(false)
-                    .callObservers(false)
                     .execute();
             }
         });
@@ -500,7 +496,7 @@ export class SubjectExecutor {
             subject.metadata.columns.forEach(column => {
 
                 // if table inheritance is used make sure this column is not child's column
-                if (subject.metadata.childEntityMetadatas.length > 0 && subject.metadata.childEntityMetadatas.map(metadata => metadata.target).indexOf(column.target) !== -1)
+                if (subject.metadata.childEntityMetadatas.length > 0 && subject.metadata.childEntityMetadatas.findIndex(metadata => metadata.target === column.target) !== -1)
                     return;
 
                 // entities does not have virtual columns
@@ -518,7 +514,7 @@ export class SubjectExecutor {
                 if (subject.updatedRelationMaps.length > 0) {
                     subject.updatedRelationMaps.forEach(updatedRelationMap => {
                         updatedRelationMap.relation.joinColumns.forEach(column => {
-                            if (column.isVirtual === true)
+                            if (column.isVirtual)
                                 return;
 
                             column.setEntityValue(subject.entity!, updatedRelationMap.value instanceof Object ? column.referencedColumn!.getEntityValue(updatedRelationMap.value) : updatedRelationMap.value);

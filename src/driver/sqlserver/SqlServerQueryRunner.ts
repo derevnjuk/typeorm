@@ -348,7 +348,7 @@ export class SqlServerQueryRunner extends BaseQueryRunner implements QueryRunner
         const schema = parsedTableName.schema === "SCHEMA_NAME()" ? parsedTableName.schema : `'${parsedTableName.schema}'`;
         const sql = `SELECT * FROM "${parsedTableName.database}"."INFORMATION_SCHEMA"."TABLES" WHERE "TABLE_NAME" = '${parsedTableName.tableName}' AND "TABLE_SCHEMA" = ${schema}`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -359,7 +359,7 @@ export class SqlServerQueryRunner extends BaseQueryRunner implements QueryRunner
         const schema = parsedTableName.schema === "SCHEMA_NAME()" ? parsedTableName.schema : `'${parsedTableName.schema}'`;
         const sql = `SELECT * FROM "${parsedTableName.database}"."INFORMATION_SCHEMA"."TABLES" WHERE "TABLE_NAME" = '${parsedTableName.tableName}' AND "COLUMN_NAME" = '${columnName}' AND "TABLE_SCHEMA" = ${schema}`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -755,7 +755,7 @@ export class SqlServerQueryRunner extends BaseQueryRunner implements QueryRunner
                 upQueries.push(`EXEC sp_rename "${this.escapeTableName(table, true)}.${oldColumn.name}", "${newColumn.name}"`);
                 downQueries.push(`EXEC sp_rename "${this.escapeTableName(table, true)}.${newColumn.name}", "${oldColumn.name}"`);
 
-                if (oldColumn.isPrimary === true) {
+                if (oldColumn.isPrimary) {
                     const primaryColumns = clonedTable.primaryColumns;
 
                     // build old primary constraint name
@@ -862,7 +862,7 @@ export class SqlServerQueryRunner extends BaseQueryRunner implements QueryRunner
                     downQueries.push(`ALTER TABLE ${this.escapeTableName(table)} ADD CONSTRAINT "${pkName}" PRIMARY KEY (${columnNames})`);
                 }
 
-                if (newColumn.isPrimary === true) {
+                if (newColumn.isPrimary) {
                     primaryColumns.push(newColumn);
                     // update column in table
                     const column = clonedTable.columns.find(column => column.name === newColumn.name);
@@ -891,7 +891,7 @@ export class SqlServerQueryRunner extends BaseQueryRunner implements QueryRunner
             }
 
             if (newColumn.isUnique !== oldColumn.isUnique) {
-                if (newColumn.isUnique === true) {
+                if (newColumn.isUnique) {
                     const uniqueConstraint = new TableUnique({
                         name: this.connection.namingStrategy.uniqueConstraintName(table.name, [newColumn.name]),
                         columnNames: [newColumn.name]
@@ -1930,10 +1930,10 @@ export class SqlServerQueryRunner extends BaseQueryRunner implements QueryRunner
         if (column.collation)
             c += " COLLATE " + column.collation;
 
-        if (column.isNullable !== true)
+        if (!column.isNullable)
             c += " NOT NULL";
 
-        if (column.isGenerated === true && column.generationStrategy === "increment" && !skipIdentity) // don't use skipPrimary here since updates can update already exist primary without auto inc.
+        if (column.isGenerated && column.generationStrategy === "increment" && !skipIdentity) // don't use skipPrimary here since updates can update already exist primary without auto inc.
             c += " IDENTITY(1,1)";
 
         if (column.default !== undefined && column.default !== null && createDefault) {

@@ -1,5 +1,4 @@
 import {BaseConnectionOptions} from "../../connection/BaseConnectionOptions";
-import {ReadPreference} from "./typings";
 
 /**
  * MongoDB specific connection options.
@@ -41,290 +40,135 @@ export interface MongoConnectionOptions extends BaseConnectionOptions {
      * Database name to connect to.
      */
     readonly database?: string;
-
+    /** Specifies the name of the replica set, if the mongod is a member of a replica set. */
+    replicaSet?: string;
+    /** Enables or disables TLS/SSL for the connection. */
+    tls?: boolean;
+    /** A boolean to enable or disables TLS/SSL for the connection. (The ssl option is equivalent to the tls option.) */
+    ssl?: boolean;
+    /** Specifies the location of a local TLS Certificate */
+    tlsCertificateFile?: string;
+    /** Specifies the location of a local .pem file that contains either the client's TLS/SSL certificate and key or only the client's TLS/SSL key when tlsCertificateFile is used to provide the certificate. */
+    tlsCertificateKeyFile?: string;
+    /** Specifies the password to de-crypt the tlsCertificateKeyFile. */
+    tlsCertificateKeyFilePassword?: string;
+    /** Specifies the location of a local .pem file that contains the root certificate chain from the Certificate Authority. This file is used to validate the certificate presented by the mongod/mongos instance. */
+    tlsCAFile?: string;
+    /** Bypasses validation of the certificates presented by the mongod/mongos instance */
+    tlsAllowInvalidCertificates?: boolean;
+    /** Disables hostname validation of the certificate presented by the mongod/mongos instance. */
+    tlsAllowInvalidHostnames?: boolean;
+    /** Disables various certificate validations. */
+    tlsInsecure?: boolean;
+    /** The time in milliseconds to attempt a connection before timing out. */
+    connectTimeoutMS?: number;
+    /** The time in milliseconds to attempt a send or receive on a socket before the attempt times out. */
+    socketTimeoutMS?: number;
+    /** An array or comma-delimited string of compressors to enable network compression for communication between this client and a mongod/mongos instance. */
+    compressors?: string[] | string;
+    /** An integer that specifies the compression level if using zlib for network compression. */
+    zlibCompressionLevel?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | undefined;
+    /** The maximum number of hosts to connect to when using an srv connection string, a setting of `0` means unlimited hosts */
+    srvMaxHosts?: number;
     /**
-     * Set the maximum poolSize for each individual server or proxy connection.
+     * Modifies the srv URI to look like:
+     *
+     * `_{srvServiceName}._tcp.{hostname}.{domainname}`
+     *
+     * Querying this DNS URI is expected to respond with SRV records
      */
-    readonly poolSize?: number;
-
-    /**
-     * Use ssl connection (needs to have a mongod server with ssl support). Default: false
-     */
-    readonly ssl?: boolean;
-
-    /**
-     * Validate mongod server certificate against ca (needs to have a mongod server with ssl support, 2.4 or higher).
-     * Default: true
-     */
-    readonly sslValidate?: boolean;
-
-    /**
-     * Array of valid certificates either as Buffers or Strings
-     * (needs to have a mongod server with ssl support, 2.4 or higher).
-     */
-    readonly sslCA?: string[]|Buffer[];
-
-    /**
-     * String or buffer containing the certificate we wish to present
-     * (needs to have a mongod server with ssl support, 2.4 or higher)
-     */
-    readonly sslCert?: string|Buffer;
-
-    /**
-     * String or buffer containing the certificate private key we wish to present
-     * (needs to have a mongod server with ssl support, 2.4 or higher)
-     */
-    readonly sslKey?: string;
-
-    /**
-     * String or buffer containing the certificate password
-     * (needs to have a mongod server with ssl support, 2.4 or higher)
-     */
-    readonly sslPass?: string|Buffer;
-
-    /**
-     * SSL Certificate revocation list binary buffer
-     * (needs to have a mongod server with ssl support, 2.4 or higher)
-     */
-    readonly sslCRL?: string|Buffer;
-
-    /**
-     * Reconnect on error. Default: true
-     */
-    readonly autoReconnect?: boolean;
-
-    /**
-     * TCP Socket NoDelay option. Default: true
-     */
-    readonly noDelay?: boolean;
-
-    /**
-     * The number of milliseconds to wait before initiating keepAlive on the TCP socket. Default: 30000
-     */
-    readonly keepAlive?: number;
-
-    /**
-     * TCP Connection timeout setting. Default: 30000
-     */
-    readonly connectTimeoutMS?: number;
-
-    /**
-     * Version of IP stack. Can be 4, 6.
-     * If undefined, will attempt to connect with IPv6, and will fall back to IPv4 on failure
-     */
-    readonly family?: number;
-
-    /**
-     * TCP Socket timeout setting. Default: 360000
-     */
-    readonly socketTimeoutMS?: number;
-
-    /**
-     * Server attempt to reconnect #times. Default 30
-     */
-    readonly reconnectTries?: number;
-
-    /**
-     * Server will wait #milliseconds between retries. Default 1000
-     */
-    readonly reconnectInterval?: number;
-
-    /**
-     * Control if high availability monitoring runs for Replicaset or Mongos proxies. Default true
-     */
-    readonly ha?: boolean;
-
-    /**
-     * The High availability period for replicaset inquiry. Default: 10000
-     */
-    readonly haInterval?: number;
-
-    /**
-     * The name of the replicaset to connect to
-     */
-    readonly replicaSet?: string;
-
-    /**
-     * Sets the range of servers to pick when using NEAREST (lowest ping ms + the latency fence, ex: range of 1 to (1 + 15) ms).
-     * Default: 15
-     */
-    readonly acceptableLatencyMS?: number;
-
-    /**
-     * Sets the range of servers to pick when using NEAREST (lowest ping ms + the latency fence, ex: range of 1 to (1 + 15) ms).
-     * Default: 15
-     */
-    readonly secondaryAcceptableLatencyMS?: number;
-
-    /**
-     * Sets if the driver should connect even if no primary is available. Default: false
-     */
-    readonly connectWithNoPrimary?: boolean;
-
-    /**
-     * If the database authentication is dependent on another databaseName.
-     */
-    readonly authSource?: string;
-
-    /**
-     * The write concern.
-     */
-    readonly w?: string|number;
-
-    /**
-     * The write concern timeout value.
-     */
-    readonly wtimeout?: number;
-
-    /**
-     * Specify a journal write concern. Default: false
-     */
-    readonly j?: boolean;
-
-    /**
-     * Force server to assign _id values instead of driver. Default: false
-     */
-    readonly forceServerObjectId?: boolean;
-
-    /**
-     * Serialize functions on any object. Default: false
-     */
-    readonly serializeFunctions?: boolean;
-
-    /**
-     * Specify if the BSON serializer should ignore undefined fields. Default: false
-     */
-    readonly ignoreUndefined?: boolean;
-
-    /**
-     * Return document results as raw BSON buffers. Default: false
-     */
-    readonly raw?: boolean;
-
-    /**
-     * Promotes Long values to number if they fit inside the 53 bits resolution. Default: true
-     */
-    readonly promoteLongs?: boolean;
-
-    /**
-     * Promotes Binary BSON values to native Node Buffers. Default: false
-     */
-    readonly promoteBuffers?: boolean;
-
-    /**
-     * Promotes BSON values to native types where possible, set to false to only receive wrapper types. Default: true
-     */
-    readonly promoteValues?: boolean;
-
-    /**
-     * Enable the wrapping of the callback in the current domain, disabled by default to avoid perf hit. Default: false
-     */
-    readonly domainsEnabled?: boolean;
-
-    /**
-     * Sets a cap on how many operations the driver will buffer up before giving up on getting a working connection,
-     * default is -1 which is unlimited.
-     */
-    readonly bufferMaxEntries?: number;
-
-    /**
-     * The preferred read preference (ReadPreference.PRIMARY, ReadPreference.PRIMARY_PREFERRED, ReadPreference.SECONDARY,
-     * ReadPreference.SECONDARY_PREFERRED, ReadPreference.NEAREST).
-     */
-    readonly readPreference?: ReadPreference|string;
-
-    /**
-     * A primary key factory object for generation of custom _id keys.
-     */
-    readonly pkFactory?: any;
-
-    /**
-     * A Promise library class the application wishes to use such as Bluebird, must be ES6 compatible.
-     */
-    readonly promiseLibrary?: any;
-
-    /**
-     * Specify a read concern for the collection. (only MongoDB 3.2 or higher supported).
-     */
-    readonly readConcern?: any;
-
-    /**
-     * Specify a maxStalenessSeconds value for secondary reads, minimum is 90 seconds
-     */
-    readonly maxStalenessSeconds?: number;
-
-    /**
-     * Specify the log level used by the driver logger (error/warn/info/debug).
-     */
-    readonly loggerLevel?: "error"|"warn"|"info"|"debug";
-
-    // Do not overwrite BaseConnectionOptions.logger
-    // readonly logger?: any;
-
-    /**
-     * Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function
-     * Default: true
-     */
-    readonly checkServerIdentity?: boolean|Function;
-
-    /**
-     * Validate MongoClient passed in options for correctness. Default: false
-     */
-    readonly validateOptions?: boolean|any;
-
-    /**
-     * The name of the application that created this MongoClient instance. MongoDB 3.4 and newer will print this value in the server log upon establishing each connection. It is also recorded in the slow query log and profile collections
-     */
-    readonly appname?: string;
-
-    /**
-     * Sets the authentication mechanism that MongoDB will use to authenticate the connection
-     */
-    readonly authMechanism?: string;
-
-    /**
-     * Type of compression to use: snappy or zlib
-     */
-    readonly compression?: any;
-
-    /**
-     * Specify a file sync write concern. Default: false
-     */
-    readonly fsync?: boolean;
-
-    /**
-     * Read preference tags
-     */
-    readonly readPreferenceTags?: any[];
-
-    /**
-     * The number of retries for a tailable cursor. Default: 5
-     */
-    readonly numberOfRetries?: number;
-
-    /**
-     * Enable auto reconnecting for single server instances. Default: true
-     */
-    readonly auto_reconnect?: boolean;
-
-    /**
-     * Enable command monitoring for this client. Default: false
-     */
-    readonly monitorCommands?: boolean;
-
-    /**
-     * If present, the connection pool will be initialized with minSize connections, and will never dip below minSize connections
-     */
-    readonly minSize?: number;
-
-    /**
-     * Determines whether or not to use the new url parser. Default: false
-     */
-    readonly useNewUrlParser?: boolean;
-
-    /**
-     * Determines whether or not to use the new Server Discovery and Monitoring engine. Default: false
-     * https://github.com/mongodb/node-mongodb-native/releases/tag/v3.2.1
-     */
-    readonly useUnifiedTopology?: boolean;
+    srvServiceName?: string;
+    /** The maximum number of connections in the connection pool. */
+    maxPoolSize?: number;
+    /** The minimum number of connections in the connection pool. */
+    minPoolSize?: number;
+    /** The maximum number of milliseconds that a connection can remain idle in the pool before being removed and closed. */
+    maxIdleTimeMS?: number;
+    /** The maximum time in milliseconds that a thread can wait for a connection to become available. */
+    waitQueueTimeoutMS?: number;
+    /** Specify a read concern for the collection (only MongoDB 3.2 or higher supported) */
+    readConcern?: string | {level: string};
+    /** The level of isolation */
+    readConcernLevel?: string;
+    /** Specifies the read preferences for this connection */
+    readPreference?: string;
+    /** Specifies, in seconds, how stale a secondary can be before the client stops using it for read operations. */
+    maxStalenessSeconds?: number;
+    /** Specifies the tags document as a comma-separated list of colon-separated key-value pairs.  */
+    readPreferenceTags?: Record<string, string>[];
+    /** Specify the database name associated with the user’s credentials. */
+    authSource?: string;
+    /** Specify the authentication mechanism that MongoDB will use to authenticate the connection. */
+    authMechanism?: string;
+    /** Specify properties for the specified authMechanism as a comma-separated list of colon-separated key-value pairs. */
+    authMechanismProperties?: Record<string, unknown>;
+    /** The size (in milliseconds) of the latency window for selecting among multiple suitable MongoDB instances. */
+    localThresholdMS?: number;
+    /** Specifies how long (in milliseconds) to block for server selection before throwing an exception.  */
+    serverSelectionTimeoutMS?: number;
+    /** heartbeatFrequencyMS controls when the driver checks the state of the MongoDB deployment. Specify the interval (in milliseconds) between checks, counted from the end of the previous check until the beginning of the next one. */
+    heartbeatFrequencyMS?: number;
+    /** Sets the minimum heartbeat frequency. In the event that the driver has to frequently re-check a server's availability, it will wait at least this long since the previous check to avoid wasted effort. */
+    minHeartbeatFrequencyMS?: number;
+    /** The name of the application that created this MongoClient instance. MongoDB 3.4 and newer will print this value in the server log upon establishing each connection. It is also recorded in the slow query log and profile collections */
+    appName?: string;
+    /** Enables retryable reads. */
+    retryReads?: boolean;
+    /** Enable retryable writes. */
+    retryWrites?: boolean;
+    /** Allow a driver to force a Single topology type with a connection string containing one host */
+    directConnection?: boolean;
+    /** Instruct the driver it is connecting to a load balancer fronting a mongos like service */
+    loadBalanced?: boolean;
+    /** The write concern w value */
+    w?: number | 'majority';
+    /** The write concern timeout */
+    wtimeoutMS?: number;
+    /** The journal write concern */
+    journal?: boolean;
+    /** Validate mongod server certificate against Certificate Authority */
+    sslValidate?: boolean;
+    /** SSL Certificate file path. */
+    sslCA?: string;
+    /** SSL Certificate file path. */
+    sslCert?: string;
+    /** SSL Key file file path. */
+    sslKey?: string;
+    /** SSL Certificate pass phrase. */
+    sslPass?: string;
+    /** SSL Certificate revocation list file path. */
+    sslCRL?: string;
+    /** TCP Connection no delay */
+    noDelay?: boolean;
+    /** TCP Connection keep alive enabled */
+    keepAlive?: boolean;
+    /** The number of milliseconds to wait before initiating keepAlive on the TCP socket */
+    keepAliveInitialDelay?: number;
+    /** Force server to assign `_id` values instead of driver */
+    forceServerObjectId?: boolean;
+    /** Return document results as raw BSON buffers */
+    raw?: boolean;
+    /** A Promise library class the application wishes to use such as Bluebird, must be ES6 compatible */
+    promiseLibrary?: any;
+    /** Enable command monitoring for this client */
+    monitorCommands?: boolean;
+    /** Server API version */
+    serverApi?: {
+          version: {
+              readonly v1: "1";
+          };
+          strict?: boolean;
+          deprecationErrors?: boolean;
+      }
+      | {
+        readonly v1: "1";
+    };
+    /** Configures a Socks5 proxy host used for creating TCP connections. */
+    proxyHost?: string;
+    /** Configures a Socks5 proxy port used for creating TCP connections. */
+    proxyPort?: number;
+    /** Configures a Socks5 proxy username when the proxy in proxyHost requires username/password authentication. */
+    proxyUsername?: string;
+    /** Configures a Socks5 proxy password when the proxy in proxyHost requires username/password authentication. */
+    proxyPassword?: string;
 }

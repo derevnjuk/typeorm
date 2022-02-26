@@ -207,7 +207,7 @@ export class SqlServerDriver implements Driver {
     constructor(connection: Connection) {
         this.connection = connection;
         this.options = connection.options as SqlServerConnectionOptions;
-        this.isReplicated = this.options.replication ? true : false;
+        this.isReplicated = !!this.options.replication;
 
         // load mssql package
         this.loadDependencies();
@@ -404,7 +404,7 @@ export class SqlServerDriver implements Driver {
             return columnMetadata.transformer ? columnMetadata.transformer.from(value) : value;
 
         if (columnMetadata.type === Boolean) {
-            value = value ? true : false;
+            value = !!value;
 
         } else if (columnMetadata.type === "datetime"
             || columnMetadata.type === Date
@@ -488,7 +488,7 @@ export class SqlServerDriver implements Driver {
             return "" + defaultValue;
 
         } else if (typeof defaultValue === "boolean") {
-            return defaultValue === true ? "1" : "0";
+            return defaultValue ? "1" : "0";
 
         } else if (typeof defaultValue === "function") {
             return /*"(" + */defaultValue()/* + ")"*/;
@@ -620,10 +620,8 @@ export class SqlServerDriver implements Driver {
      * Returns true if driver supports RETURNING / OUTPUT statement.
      */
     isReturningSqlSupported(): boolean {
-        if (this.options.options && this.options.options.disableOutputReturning) {
-            return false;
-        }
-        return true;
+        return !(this.options.options && this.options.options.disableOutputReturning);
+
     }
 
     /**

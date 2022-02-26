@@ -14,8 +14,7 @@ import {SqljsDriver} from "../driver/sqljs/SqljsDriver";
 import {MysqlDriver} from "../driver/mysql/MysqlDriver";
 import {BroadcasterResult} from "../subscriber/BroadcasterResult";
 import {EntitySchema} from "../index";
-import {ObserverExecutor} from "../observer/ObserverExecutor";
-import { OracleDriver } from "../driver/oracle/OracleDriver";
+import {OracleDriver} from "../driver/oracle/OracleDriver";
 
 /**
  * Allows to build complex sql queries in a fashion way and execute those queries.
@@ -54,13 +53,13 @@ export class DeleteQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         try {
 
             // start transaction if it was enabled
-            if (this.expressionMap.useTransaction === true && queryRunner.isTransactionActive === false) {
+            if (this.expressionMap.useTransaction && !queryRunner.isTransactionActive) {
                 await queryRunner.startTransaction();
                 transactionStartedByUs = true;
             }
 
             // call before deletion methods in listeners and subscribers
-            if (this.expressionMap.callListeners === true && this.expressionMap.mainAlias!.hasMetadata) {
+            if (this.expressionMap.callListeners && this.expressionMap.mainAlias!.hasMetadata) {
                 const broadcastResult = new BroadcasterResult();
                 queryRunner.broadcaster.broadcastBeforeRemoveEvent(broadcastResult, this.expressionMap.mainAlias!.metadata);
                 if (broadcastResult.promises.length > 0) await Promise.all(broadcastResult.promises);
@@ -86,7 +85,7 @@ export class DeleteQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             }
 
             // call after deletion methods in listeners and subscribers
-            if (this.expressionMap.callListeners === true && this.expressionMap.mainAlias!.hasMetadata) {
+            if (this.expressionMap.callListeners && this.expressionMap.mainAlias!.hasMetadata) {
                 const broadcastResult = new BroadcasterResult();
                 queryRunner.broadcaster.broadcastAfterRemoveEvent(broadcastResult, this.expressionMap.mainAlias!.metadata);
                 if (broadcastResult.promises.length > 0) await Promise.all(broadcastResult.promises);
@@ -95,14 +94,6 @@ export class DeleteQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs)
                 await queryRunner.commitTransaction();
-
-            // second case is when operation is executed without transaction and at the same time
-            // nobody started transaction from the above
-            if (this.expressionMap.callObservers) {
-                if (transactionStartedByUs || (this.expressionMap.useTransaction === false && queryRunner.isTransactionActive === false)) {
-                    await new ObserverExecutor(this.connection.observers).execute();
-                }
-            }
 
             return deleteResult;
 

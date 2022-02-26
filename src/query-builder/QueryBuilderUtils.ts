@@ -23,10 +23,9 @@ export class QueryBuilderUtils {
         // if (!aliasNameRegexp.test(aliasName) || !aliasNameRegexp.test(propertyName))
         //     return false;
         // make sure string is not a subquery
-        if (str.indexOf("(") !== -1 || str.indexOf(")") !== -1)
-            return false;
+        return !(str.indexOf("(") !== -1 || str.indexOf(")") !== -1);
 
-        return true;
+
     }
 
     static extractAliasAndPropertyPath(str: string): [string, string] {

@@ -1,5 +1,4 @@
 import {Driver} from "../driver/Driver";
-import {QueryObserver} from "../observer/QueryObserver";
 import {Repository} from "../repository/Repository";
 import {EntitySubscriberInterface} from "../subscriber/EntitySubscriberInterface";
 import {ObjectType} from "../common/ObjectType";
@@ -32,14 +31,13 @@ import {QueryResultCache} from "../cache/QueryResultCache";
 import {SqljsEntityManager} from "../entity-manager/SqljsEntityManager";
 import {RelationLoader} from "../query-builder/RelationLoader";
 import {RelationIdLoader} from "../query-builder/RelationIdLoader";
-import {EntitySchema} from "../";
+import {EntitySchema, PromiseUtils} from "../";
 import {SqlServerDriver} from "../driver/sqlserver/SqlServerDriver";
 import {MysqlDriver} from "../driver/mysql/MysqlDriver";
 import {ObjectUtils} from "../util/ObjectUtils";
-import {PromiseUtils} from "../";
 import {IsolationLevel} from "../driver/types/IsolationLevel";
-import { EntityFactoryInterface } from "../entity-factory/EntityFactoryInterface";
-import { DefaultEntityFactory } from "../entity-factory/DefaultEntityFactory";
+import {EntityFactoryInterface} from "../entity-factory/EntityFactoryInterface";
+import {DefaultEntityFactory} from "../entity-factory/DefaultEntityFactory";
 
 /**
  * Connection is a single database ORM connection to a specific database.
@@ -101,11 +99,6 @@ export class Connection {
      * Entity factory used to instantiate entities objects
      */
     readonly entityFactory: EntityFactoryInterface;
-
-    /**
-     * Observers observing queries.
-     */
-    readonly observers: QueryObserver[] = [];
 
     /**
      * All entity metadatas that are registered for this connection.
@@ -298,8 +291,7 @@ export class Connection {
         if (options && options.transaction === false) {
             migrationExecutor.transaction = false;
         }
-        const successMigrations = await migrationExecutor.executePendingMigrations();
-        return successMigrations;
+        return await migrationExecutor.executePendingMigrations();
     }
 
     /**

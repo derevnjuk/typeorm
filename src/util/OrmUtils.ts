@@ -1,4 +1,4 @@
-import { ObjectLiteral } from "../common/ObjectLiteral";
+import {ObjectLiteral} from "../common/ObjectLiteral";
 
 export class OrmUtils {
 
@@ -39,7 +39,7 @@ export class OrmUtils {
     static uniq<T, K extends keyof T>(array: T[], property: K): T[];
     static uniq<T, K extends keyof T>(array: T[], criteriaOrProperty?: ((item: T) => any) | K): T[] {
         return array.reduce((uniqueArray, item) => {
-            let found: boolean = false;
+            let found: boolean;
             if (criteriaOrProperty instanceof Function) {
                 const itemValue = criteriaOrProperty(item);
                 found = !!uniqueArray.find(uniqueItem => criteriaOrProperty(uniqueItem) === itemValue);
@@ -137,16 +137,6 @@ export class OrmUtils {
             return value > 0;
 
         return false;
-    }
-
-    /**
-     * Composes an object from the given array of keys and values.
-     */
-    static zipObject(keys: any[], values: any[]): ObjectLiteral {
-        return keys.reduce((object, column, index) => {
-            object[column] = values[index];
-            return object;
-        }, {} as ObjectLiteral);
     }
 
     /**

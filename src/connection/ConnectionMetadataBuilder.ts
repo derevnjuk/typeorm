@@ -53,7 +53,7 @@ export class ConnectionMetadataBuilder {
         // todo: instead we need to merge multiple metadata args storages
 
         const [entityClassesOrSchemas, entityDirectories] = OrmUtils.splitClassesAndStrings(entities || []);
-        const entityClasses: Function[] = entityClassesOrSchemas.filter(entityClass => (entityClass instanceof EntitySchema) === false) as any;
+        const entityClasses: Function[] = entityClassesOrSchemas.filter(entityClass => !(entityClass instanceof EntitySchema)) as any;
         const entitySchemas: EntitySchema<any>[] = entityClassesOrSchemas.filter(entityClass => entityClass instanceof EntitySchema) as any;
 
         const allEntityClasses = [...entityClasses, ...importClassesFromDirectories(entityDirectories)];

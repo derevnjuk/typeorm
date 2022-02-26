@@ -12,7 +12,6 @@ import {SelectQueryBuilder} from "../query-builder/SelectQueryBuilder";
 import {QueryRunner} from "../query-runner/QueryRunner";
 import {RemoveOptions} from "./RemoveOptions";
 import {SaveOptions} from "./SaveOptions";
-import * as Observable from "zen-observable";
 
 /**
  * Repository is supposed to work with your entity objects. Find entities, insert, update, delete, etc.
@@ -315,86 +314,6 @@ export class Repository<Entity extends ObjectLiteral> {
      */
     findOneOrFail(optionsOrConditions?: string|number|Date|ObjectID|FindOptions<Entity>|FindOptionsWhere<Entity>, maybeOptions?: FindOptions<Entity>): Promise<Entity> {
         return this.manager.findOneOrFail(this.metadata.target as any, optionsOrConditions as any, maybeOptions);
-    }
-
-    /**
-     * Finds entities that match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observe<Entity>(options?: FindOptions<Entity>): Observable<Entity[]>;
-
-    /**
-     * Finds entities that match given conditions and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observe<Entity>(conditions?: FindOptionsWhere<Entity>): Observable<Entity[]>;
-
-    /**
-     * Finds entities that match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observe<Entity>(optionsOrConditions?: FindOptions<Entity>|FindOptionsWhere<Entity>): Observable<Entity[]> {
-        return this.manager.observe(this.metadata.target, optionsOrConditions as any);
-    }
-
-    /**
-     * Finds entities and count that match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeManyAndCount<Entity>(options?: FindOptions<Entity>): Observable<[Entity[], number]>;
-
-    /**
-     * Finds entities and count that match given conditions and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeManyAndCount<Entity>(conditions?: FindOptionsWhere<Entity>): Observable<[Entity[], number]>;
-
-    /**
-     * Finds entities and count that match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeManyAndCount<Entity>(optionsOrConditions?: FindOptions<Entity>|FindOptionsWhere<Entity>): Observable<[Entity[], number]> {
-        return this.manager.observeManyAndCount(this.metadata.target, optionsOrConditions as any);
-    }
-
-    /**
-     * Finds entity that match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeOne<Entity>(options?: FindOptions<Entity>): Observable<Entity>;
-
-    /**
-     * Finds entity that match given conditions and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeOne<Entity>(conditions?: FindOptionsWhere<Entity>): Observable<Entity>;
-
-    /**
-     * Finds entity that match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeOne<Entity>(optionsOrConditions?: FindOptions<Entity>|FindOptionsWhere<Entity>): Observable<Entity> {
-        return this.manager.observeOne(this.metadata.target, optionsOrConditions as any);
-    }
-
-    /**
-     * Gets the entities count match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeCount<Entity>(options?: FindOptions<Entity>): Observable<number>;
-
-    /**
-     * Gets the entities count match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeCount<Entity>(conditions?: FindOptionsWhere<Entity>): Observable<number>;
-
-    /**
-     * Gets the entities count match given options and returns observable.
-     * Whenever new data appears that matches given query observable emits new value.
-     */
-    observeCount<Entity>(optionsOrConditions?: FindOptions<Entity>|FindOptionsWhere<Entity>): Observable<number> {
-        return this.manager.observeCount(this.metadata.target, optionsOrConditions as any);
     }
 
     /**

@@ -113,7 +113,7 @@ export class EntityMetadataValidator {
             if (relation.isManyToMany || relation.isOneToMany) {
 
                 // we skip relations for which persistence is disabled since initialization in them cannot harm somehow
-                if (relation.persistenceEnabled === false)
+                if (!relation.persistenceEnabled)
                     return;
 
                 // get entity relation value and check if its an array

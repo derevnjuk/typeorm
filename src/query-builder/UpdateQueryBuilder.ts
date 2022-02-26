@@ -1,5 +1,4 @@
 import {CockroachDriver} from "../driver/cockroachdb/CockroachDriver";
-import {ObserverExecutor} from "../observer/ObserverExecutor";
 import {QueryBuilder} from "./QueryBuilder";
 import {ObjectLiteral} from "../common/ObjectLiteral";
 import {Connection} from "../connection/Connection";
@@ -62,13 +61,13 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
         try {
 
             // start transaction if it was enabled
-            if (this.expressionMap.useTransaction === true && queryRunner.isTransactionActive === false) {
+            if (this.expressionMap.useTransaction && !queryRunner.isTransactionActive) {
                 await queryRunner.startTransaction();
                 transactionStartedByUs = true;
             }
 
             // call before updation methods in listeners and subscribers
-            if (this.expressionMap.callListeners === true && this.expressionMap.mainAlias!.hasMetadata) {
+            if (this.expressionMap.callListeners && this.expressionMap.mainAlias!.hasMetadata) {
                 const broadcastResult = new BroadcasterResult();
                 queryRunner.broadcaster.broadcastBeforeUpdateEvent(broadcastResult, this.expressionMap.mainAlias!.metadata);
                 if (broadcastResult.promises.length > 0) await Promise.all(broadcastResult.promises);
@@ -76,8 +75,7 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
 
             // if update entity mode is enabled we may need extra columns for the returning statement
             const returningResultsEntityUpdator = new ReturningResultsEntityUpdator(queryRunner, this.expressionMap);
-            if (this.expressionMap.updateEntity === true &&
-                this.expressionMap.mainAlias!.hasMetadata &&
+            if (this.expressionMap.updateEntity && this.expressionMap.mainAlias!.hasMetadata &&
                 this.expressionMap.whereEntities.length > 0) {
                 this.expressionMap.extraReturningColumns = returningResultsEntityUpdator.getUpdationReturningColumns();
             }
@@ -97,14 +95,13 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             }
 
             // if we are updating entities and entity updation is enabled we must update some of entity columns (like version, update date, etc.)
-            if (this.expressionMap.updateEntity === true &&
-                this.expressionMap.mainAlias!.hasMetadata &&
+            if (this.expressionMap.updateEntity && this.expressionMap.mainAlias!.hasMetadata &&
                 this.expressionMap.whereEntities.length > 0) {
                 await returningResultsEntityUpdator.update(updateResult, this.expressionMap.whereEntities);
             }
 
             // call after updation methods in listeners and subscribers
-            if (this.expressionMap.callListeners === true && this.expressionMap.mainAlias!.hasMetadata) {
+            if (this.expressionMap.callListeners && this.expressionMap.mainAlias!.hasMetadata) {
                 const broadcastResult = new BroadcasterResult();
                 queryRunner.broadcaster.broadcastAfterUpdateEvent(broadcastResult, this.expressionMap.mainAlias!.metadata);
                 if (broadcastResult.promises.length > 0) await Promise.all(broadcastResult.promises);
@@ -113,14 +110,6 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs)
                 await queryRunner.commitTransaction();
-
-            // second case is when operation is executed without transaction and at the same time
-            // nobody started transaction from the above
-            if (this.expressionMap.callObservers) {
-                if (transactionStartedByUs || (this.expressionMap.useTransaction === false && queryRunner.isTransactionActive === false)) {
-                    await new ObserverExecutor(this.connection.observers).execute();
-                }
-            }
 
             return updateResult;
 
@@ -435,7 +424,7 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                             this.expressionMap.nativeParameters[paramName] = value;
                         }
 
-                        let expression = null;
+                        let expression: string;
                         if (this.connection.driver instanceof MysqlDriver && this.connection.driver.spatialTypes.indexOf(column.type) !== -1) {
                             expression = `GeomFromText(${this.connection.driver.createParameter(paramName, parametersCount)})`;
                         } else if (this.connection.driver instanceof PostgresDriver && this.connection.driver.spatialTypes.indexOf(column.type) !== -1) {

@@ -183,10 +183,10 @@ export class EntitySchemaTransformer {
                     const indexAgrs: IndexMetadataArgs = {
                         target: options.target || options.name,
                         name: index.name,
-                        unique: index.unique === true ? true : false,
-                        spatial: index.spatial === true ? true : false,
-                        fulltext: index.fulltext === true ? true : false,
-                        synchronize: index.synchronize === false ? false : true,
+                        unique: index.unique === true,
+                        spatial: index.spatial === true,
+                        fulltext: index.fulltext === true,
+                        synchronize: index.synchronize !== false,
                         where: index.where,
                         sparse: index.sparse,
                         columns: index.columns
