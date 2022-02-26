@@ -486,9 +486,19 @@ export class PostgresDriver implements Driver {
 
         } else if (columnMetadata.type === "enum" || columnMetadata.type === "simple-enum" ) {
             if (columnMetadata.isArray) {
+                if (value === "{}") return [];
+
                 // manually convert enum array to array of values (pg does not support, see https://github.com/brianc/node-pg-types/issues/56)
-                value = value !== "{}" ? (value as string).substr(1, (value as string).length - 2).split(",") : [];
-                // convert to number if that exists in poosible enum options
+                value = (value as string).substr(1, (value as string).length - 2).split(",").map(val => {
+                    // replace double quotes from the beginning and from the end
+                    if (val.startsWith(`"`) && val.endsWith(`"`)) val = val.slice(1, -1);
+                    // replace double escaped backslash to single escaped e.g. \\\\ -> \\
+                    val = val.replace(/(\\\\)/g, "\\");
+                    // replace escaped double quotes to non-escaped e.g. \"asd\" -> "asd"
+                    return val.replace(/(\\")/g, '"');
+                });
+
+                // convert to number if that exists in possible enum options
                 value = value.map((val: string) => {
                     return !isNaN(+val) && columnMetadata.enum!.indexOf(parseInt(val)) >= 0 ? parseInt(val) : val;
                 });
@@ -509,36 +519,33 @@ export class PostgresDriver implements Driver {
      * and an array of parameter names to be passed to a query.
      */
     escapeQueryWithParameters(sql: string, parameters: ObjectLiteral, nativeParameters: ObjectLiteral): [string, any[]] {
-        const builtParameters: any[] = Object.keys(nativeParameters).map(key => nativeParameters[key]);
+        const escapedParameters: any[] = Object.keys(nativeParameters).map(key => nativeParameters[key]);
         if (!parameters || !Object.keys(parameters).length)
-            return [sql, builtParameters];
+            return [sql, escapedParameters];
 
-        const keys = Object.keys(parameters).map(parameter => "(:(\\.\\.\\.)?" + parameter + "\\b)").join("|");
-        sql = sql.replace(new RegExp(keys, "g"), (key: string): string => {
-            let value: any;
-            let isArray = false;
-            if (key.substr(0, 4) === ":...") {
-                isArray = true;
-                value = parameters[key.substr(4)];
-            } else {
-                value = parameters[key.substr(1)];
+        sql = sql.replace(/:(\.\.\.)?([A-Za-z0-9_.]+)/g, (full, isArray: string, key: string): string => {
+            if (!parameters.hasOwnProperty(key)) {
+                return full;
             }
+
+            let value: any = parameters[key];
 
             if (isArray) {
                 return value.map((v: any) => {
-                    builtParameters.push(v);
-                    return "$" + builtParameters.length;
+                    escapedParameters.push(v);
+                    return this.createParameter(key, escapedParameters.length - 1);
                 }).join(", ");
 
-            } else if (value instanceof Function) {
-                return value();
-
-            } else {
-                builtParameters.push(value);
-                return "$" + builtParameters.length;
             }
+
+            if (value instanceof Function) {
+                return value();
+            }
+
+            escapedParameters.push(value);
+            return this.createParameter(key, escapedParameters.length - 1);
         }); // todo: make replace only in value statements, otherwise problems
-        return [sql, builtParameters];
+        return [sql, escapedParameters];
     }
 
     /**
@@ -621,41 +628,74 @@ export class PostgresDriver implements Driver {
      */
     normalizeDefault(columnMetadata: ColumnMetadata): string {
         const defaultValue = columnMetadata.default;
-        const arrayCast = columnMetadata.isArray ? `::${columnMetadata.type}[]` : "";
+
+        if (defaultValue === null || defaultValue === undefined) {
+            // @ts-ignore
+            return;
+        }
+
+        if (columnMetadata.isArray && Array.isArray(defaultValue)) {
+            return `'{${defaultValue.map((val: string) => `${val}`).join(",")}}'`;
+        }
 
         if (
-            (
-                columnMetadata.type === "enum"
-                || columnMetadata.type === "simple-enum"
-            ) && defaultValue !== undefined
+            (columnMetadata.type === "enum"
+            || columnMetadata.type === "simple-enum"
+            || typeof defaultValue === "number"
+            || typeof defaultValue === "string")
+            && defaultValue !== undefined
         ) {
-            if (columnMetadata.isArray && Array.isArray(defaultValue)) {
-                return `'{${defaultValue.map((val: string) => `${val}`).join(",")}}'`;
-            }
             return `'${defaultValue}'`;
         }
 
-        if (typeof defaultValue === "number") {
-            return "" + defaultValue;
-
-        } else if (typeof defaultValue === "boolean") {
+        if (typeof defaultValue === "boolean") {
             return defaultValue ? "true" : "false";
-
-        } else if (typeof defaultValue === "function") {
-            return defaultValue();
-
-        } else if (typeof defaultValue === "string") {
-            return `'${defaultValue}'${arrayCast}`;
-
-        } else if (defaultValue === null) {
-            return `null`;
-
-        } else if (typeof defaultValue === "object") {
-            return `'${JSON.stringify(defaultValue)}'`;
-
-        } else {
-            return defaultValue;
         }
+
+        if (typeof defaultValue === "function") {
+            const value = defaultValue();
+
+            return this.normalizeDatetimeFunction(value);
+        }
+
+        if (typeof defaultValue === "object") {
+            return `'${JSON.stringify(defaultValue)}'`;
+        }
+
+        return `${defaultValue}`;
+    }
+
+    protected normalizeDatetimeFunction(value: string) {
+        // check if input is datetime function
+        const upperCaseValue = value.toUpperCase();
+        const isDatetimeFunction = upperCaseValue.indexOf("CURRENT_TIMESTAMP") !== -1
+          || upperCaseValue.indexOf("CURRENT_DATE") !== -1
+          || upperCaseValue.indexOf("CURRENT_TIME") !== -1
+          || upperCaseValue.indexOf("LOCALTIMESTAMP") !== -1
+          || upperCaseValue.indexOf("LOCALTIME") !== -1;
+
+        if (isDatetimeFunction) {
+            // extract precision, e.g. "(3)"
+            const precision = value.match(/\(\d+\)/);
+
+            if (upperCaseValue.indexOf("CURRENT_TIMESTAMP") !== -1) {
+                return precision ? `('now'::text)::timestamp${precision[0]} with time zone` : "now()";
+
+            } else if (upperCaseValue === "CURRENT_DATE") {
+                return "('now'::text)::date";
+
+            } else if (upperCaseValue.indexOf("CURRENT_TIME") !== -1) {
+                return precision ? `('now'::text)::time${precision[0]} with time zone` : "('now'::text)::time with time zone";
+
+            } else if (upperCaseValue.indexOf("LOCALTIMESTAMP") !== -1) {
+                return precision ? `('now'::text)::timestamp${precision[0]} without time zone` : "('now'::text)::timestamp without time zone";
+
+            } else if (upperCaseValue.indexOf("LOCALTIME") !== -1) {
+                return precision ? `('now'::text)::time${precision[0]} without time zone` : "('now'::text)::time without time zone";
+            }
+        }
+
+        return value;
     }
 
     /**
@@ -698,13 +738,13 @@ export class PostgresDriver implements Driver {
         } else if (column.type === "timestamp with time zone") {
             type = "TIMESTAMP" + (column.precision !== null && column.precision !== undefined ? "(" + column.precision + ")" : "") + " WITH TIME ZONE";
         } else if (this.spatialTypes.indexOf(column.type as ColumnType) >= 0) {
-          if (column.spatialFeatureType != null && column.srid != null) {
-            type = `${column.type}(${column.spatialFeatureType},${column.srid})`;
-          } else if (column.spatialFeatureType != null) {
-            type = `${column.type}(${column.spatialFeatureType})`;
-          } else {
-            type = column.type;
-          }
+            if (column.spatialFeatureType != null && column.srid != null) {
+                type = `${column.type}(${column.spatialFeatureType},${column.srid})`;
+            } else if (column.spatialFeatureType != null) {
+                type = `${column.type}(${column.spatialFeatureType})`;
+            } else {
+                type = column.type;
+            }
         }
 
         if (column.isArray)
@@ -732,11 +772,13 @@ export class PostgresDriver implements Driver {
      * If replication is not setup then returns master (default) connection's database connection.
      */
     obtainSlaveConnection(): Promise<any> {
-        if (!this.slaves.length)
+        if (!this.slaves.length) {
             return this.obtainMasterConnection();
+        }
+
+        const random = Math.floor(Math.random() * this.slaves.length);
 
         return new Promise((ok, fail) => {
-            const random = Math.floor(Math.random() * this.slaves.length);
             this.slaves[random].connect((err: any, connection: any, release: any) => {
                 err ? fail(err) : ok([connection, release]);
             });
