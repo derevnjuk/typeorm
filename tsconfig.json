@@ -15,6 +15,7 @@
     "noImplicitReturns": true,
     "stripInternal": true,
     "pretty": true,
+    "useUnknownInCatchVariables": false,
     "strictNullChecks": true,
     "noUnusedLocals": true
   },

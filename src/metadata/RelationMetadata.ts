@@ -274,12 +274,12 @@ export class RelationMetadata {
         this.isCascadeInsert = args.options.cascade === true || (args.options.cascade instanceof Array && args.options.cascade.indexOf("insert") !== -1);
         this.isCascadeUpdate = args.options.cascade === true || (args.options.cascade instanceof Array && args.options.cascade.indexOf("update") !== -1);
         this.isCascadeRemove = args.options.cascade === true || (args.options.cascade instanceof Array && args.options.cascade.indexOf("remove") !== -1);
-        this.isNullable = args.options.nullable === false ? false : true;
+        this.isNullable = args.options.nullable !== false;
         this.onDelete = args.options.onDelete;
         this.onUpdate = args.options.onUpdate;
         this.deferrable = args.options.deferrable;
         this.isEager = args.options.eager || false;
-        this.persistenceEnabled = args.options.persistence === false ? false : true;
+        this.persistenceEnabled = args.options.persistence !== false;
         this.isTreeParent = args.isTreeParent || false;
         this.isTreeChildren = args.isTreeChildren || false;
         this.type = args.type instanceof Function ? (args.type as () => any)() : args.type;
@@ -288,8 +288,8 @@ export class RelationMetadata {
         this.isOneToMany = this.relationType === "one-to-many";
         this.isManyToOne = this.relationType === "many-to-one";
         this.isManyToMany = this.relationType === "many-to-many";
-        this.isOneToOneNotOwner = this.isOneToOne ? true : false;
-        this.isManyToManyNotOwner = this.isManyToMany ? true : false;
+        this.isOneToOneNotOwner = this.isOneToOne;
+        this.isManyToManyNotOwner = this.isManyToMany;
     }
 
     // ---------------------------------------------------------------------
@@ -361,7 +361,7 @@ export class RelationMetadata {
                 if (embeddedObject["__" + this.propertyName + "__"] !== undefined)
                     return embeddedObject["__" + this.propertyName + "__"];
 
-                if (getLazyRelationsPromiseValue === true)
+                if (getLazyRelationsPromiseValue)
                     return embeddedObject[this.propertyName];
 
                 return undefined;
@@ -373,7 +373,7 @@ export class RelationMetadata {
                 if (entity["__" + this.propertyName + "__"] !== undefined)
                     return entity["__" + this.propertyName + "__"];
 
-                if (getLazyRelationsPromiseValue === true)
+                if (getLazyRelationsPromiseValue)
                     return entity[this.propertyName];
 
                 return undefined;

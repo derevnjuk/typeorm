@@ -458,7 +458,7 @@ export class OracleDriver implements Driver {
             return "" + defaultValue;
 
         } else if (typeof defaultValue === "boolean") {
-            return defaultValue === true ? "1" : "0";
+            return defaultValue ? "1" : "0";
 
         } else if (typeof defaultValue === "function") {
             return defaultValue();

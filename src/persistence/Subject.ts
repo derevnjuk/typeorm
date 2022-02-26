@@ -168,8 +168,7 @@ export class Subject {
      */
     get mustBeUpdated() {
         return this.canBeUpdated &&
-            this.identifier &&
-            (this.databaseEntityLoaded === false || (this.databaseEntityLoaded && this.databaseEntity)) &&
+          this.identifier && (!this.databaseEntityLoaded || (this.databaseEntityLoaded && this.databaseEntity)) &&
             // ((this.entity && this.databaseEntity) || (!this.entity && !this.databaseEntity)) &&
             this.changeMaps.length > 0;
     }

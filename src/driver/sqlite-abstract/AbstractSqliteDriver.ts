@@ -267,7 +267,7 @@ export abstract class AbstractSqliteDriver implements Driver {
             return columnMetadata.transformer ? columnMetadata.transformer.from(value) : value;
 
         if (columnMetadata.type === Boolean || columnMetadata.type === "boolean") {
-            value = value ? true : false;
+            value = !!value;
 
         } else if (columnMetadata.type === "datetime" || columnMetadata.type === Date) {
             /**
@@ -415,7 +415,7 @@ export abstract class AbstractSqliteDriver implements Driver {
             return "" + defaultValue;
 
         } else if (typeof defaultValue === "boolean") {
-            return defaultValue === true ? "1" : "0";
+            return defaultValue ? "1" : "0";
 
         } else if (typeof defaultValue === "function") {
             return defaultValue();

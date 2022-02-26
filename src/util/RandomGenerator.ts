@@ -15,8 +15,7 @@ export class RandomGenerator {
     static sha1(str: string) {
 
         let _rotLeft = function(n: any, s: any) {
-            let t4 = (n << s) | (n >>> (32 - s));
-            return t4;
+            return (n << s) | (n >>> (32 - s));
         };
 
         let _cvtHex = function(val: any) {

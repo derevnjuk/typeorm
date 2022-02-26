@@ -8,8 +8,8 @@ import {SqlServerDriver} from "../driver/sqlserver/SqlServerDriver";
 import {MssqlParameter} from "../driver/sqlserver/MssqlParameter";
 import {SqlServerConnectionOptions} from "../driver/sqlserver/SqlServerConnectionOptions";
 import {PostgresConnectionOptions} from "../driver/postgres/PostgresConnectionOptions";
-import { MongoDriver } from "../driver/mongodb/MongoDriver";
-import { MongoQueryRunner } from "../driver/mongodb/MongoQueryRunner";
+import {MongoDriver} from "../driver/mongodb/MongoDriver";
+import {MongoQueryRunner} from "../driver/mongodb/MongoQueryRunner";
 
 /**
  * Executes migrations: runs pending and reverts previously executed migrations.
@@ -320,9 +320,9 @@ export class MigrationExecutor {
             values["timestamp"] = migration.timestamp;
             values["name"] = migration.name;
         }
-        if (this.connection.driver instanceof MongoDriver) {  
+        if (this.connection.driver instanceof MongoDriver) {
             const mongoRunner = queryRunner as MongoQueryRunner;
-            mongoRunner.databaseConnection.db(this.connection.driver.database!).collection(this.migrationsTableName).insert(values);               
+            await mongoRunner.databaseConnection.db(this.connection.driver.database!).collection(this.migrationsTableName).insert(values);
         } else {
             const qb = queryRunner.manager.createQueryBuilder();
             await qb.insert()
@@ -348,7 +348,7 @@ export class MigrationExecutor {
 
         if (this.connection.driver instanceof MongoDriver) {
             const mongoRunner = queryRunner as MongoQueryRunner;
-            mongoRunner.databaseConnection.db(this.connection.driver.database!).collection(this.migrationsTableName).deleteOne(conditions);               
+            await mongoRunner.databaseConnection.db(this.connection.driver.database!).collection(this.migrationsTableName).deleteOne(conditions);
         } else {
             const qb = queryRunner.manager.createQueryBuilder();
             await qb.delete()

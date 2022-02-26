@@ -241,7 +241,7 @@ export class PostgresDriver implements Driver {
     constructor(connection: Connection) {
         this.connection = connection;
         this.options = connection.options as PostgresConnectionOptions;
-        this.isReplicated = this.options.replication ? true : false;
+        this.isReplicated = !!this.options.replication;
 
         // load postgres package
         this.loadDependencies();
@@ -302,7 +302,7 @@ export class PostgresDriver implements Driver {
         });
         if (hasUuidColumns || hasCitextColumns || hasHstoreColumns || hasGeometryColumns || hasExclusionConstraints) {
             await Promise.all([this.master, ...this.slaves].map(pool => {
-                return new Promise((ok, fail) => {
+                return new Promise<void>((ok, fail) => {
                     pool.connect(async (err: any, connection: any, release: Function) => {
                         const { logger } = this.connection;
                         if (err) return fail(err);
@@ -448,7 +448,7 @@ export class PostgresDriver implements Driver {
             return columnMetadata.transformer ? columnMetadata.transformer.from(value) : value;
 
         if (columnMetadata.type === Boolean) {
-            value = value ? true : false;
+            value = !!value;
 
         } else if (columnMetadata.type === "datetime"
             || columnMetadata.type === Date
@@ -639,7 +639,7 @@ export class PostgresDriver implements Driver {
             return "" + defaultValue;
 
         } else if (typeof defaultValue === "boolean") {
-            return defaultValue === true ? "true" : "false";
+            return defaultValue ? "true" : "false";
 
         } else if (typeof defaultValue === "function") {
             return defaultValue();

@@ -249,7 +249,7 @@ export class Table {
             if (index.columnNames.length === 1 && index.isUnique && isMysql) {
                 const column = this.columns.find(c => c.name === index.columnNames[0]);
                 if (column)
-                    column.isUnique = this.indices.some(ind => ind.columnNames.length === 1 && ind.columnNames[0] === column.name && !!index.isUnique);
+                    column.isUnique = this.indices.some(ind => ind.columnNames.length === 1 && ind.columnNames[0] === column.name && index.isUnique);
             }
         }
     }
@@ -309,7 +309,7 @@ export class Table {
                 .filter(column => column)
                 .map(column => TableUtils.createTableColumnOptions(column, driver)),
             indices: entityMetadata.indices
-                .filter(index => index.synchronize === true)
+                .filter(index => index.synchronize)
                 .map(index => TableIndex.create(index)),
             uniques: entityMetadata.uniques.map(unique => TableUnique.create(unique)),
             checks: entityMetadata.checks.map(check => TableCheck.create(check)),

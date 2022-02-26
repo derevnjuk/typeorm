@@ -88,7 +88,7 @@ export abstract class BaseQueryRunner {
     // Protected Abstract Methods
     // -------------------------------------------------------------------------
 
-    protected abstract async loadTables(tablePaths: string[]): Promise<Table[]>;
+    protected abstract loadTables(tablePaths: string[]): Promise<Table[]>;
 
     // -------------------------------------------------------------------------
     // Public Methods
@@ -343,8 +343,8 @@ export abstract class BaseQueryRunner {
         this.sqlInMemory.downQueries.push(...downQueries);
 
         // if sql-in-memory mode is enabled then simply store sql in memory and return
-        if (this.sqlMemoryMode === true)
-            return Promise.resolve() as Promise<any>;
+        if (this.sqlMemoryMode)
+            return undefined;
 
         await PromiseUtils.runInSequence(upQueries, upQuery => this.query(upQuery));
     }

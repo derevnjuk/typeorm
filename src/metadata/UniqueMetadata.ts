@@ -92,7 +92,7 @@ export class UniqueMetadata {
 
         // if columns already an array of string then simply return it
         if (this.givenColumnNames) {
-            let columnPropertyPaths: string[] = [];
+            let columnPropertyPaths: string[];
             if (this.givenColumnNames instanceof Array) {
                 columnPropertyPaths = this.givenColumnNames.map(columnName => {
                     if (this.embeddedMetadata)

@@ -256,11 +256,6 @@ export class QueryExpressionMap {
     callListeners: boolean = true;
 
     /**
-     * Indicates if observers must be called before and after query execution.
-     */
-    callObservers: boolean = true;
-
-    /**
      * Indicates if eager relations are loaded (they are by default).
      */
     eagerRelations: boolean = true;
@@ -431,7 +426,6 @@ export class QueryExpressionMap {
         map.whereEntities = this.whereEntities;
         map.updateEntity = this.updateEntity;
         map.callListeners = this.callListeners;
-        map.callObservers = this.callObservers;
         map.useTransaction = this.useTransaction;
         map.nativeParameters = this.nativeParameters;
         return map;

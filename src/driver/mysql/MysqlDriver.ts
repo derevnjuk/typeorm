@@ -290,7 +290,7 @@ export class MysqlDriver implements Driver {
     constructor(connection: Connection) {
         this.connection = connection;
         this.options = connection.options as MysqlConnectionOptions;
-        this.isReplicated = this.options.replication ? true : false;
+        this.isReplicated = !!this.options.replication;
 
         // load mysql package
         this.loadDependencies();
@@ -465,7 +465,7 @@ export class MysqlDriver implements Driver {
             return columnMetadata.transformer ? columnMetadata.transformer.from(value) : value;
 
         if (columnMetadata.type === Boolean || columnMetadata.type === "bool" || columnMetadata.type === "boolean") {
-            value = value ? true : false;
+            value = !!value;
 
         } else if (columnMetadata.type === "datetime" || columnMetadata.type === Date) {
             value = DateUtils.normalizeHydratedDate(value);
@@ -561,7 +561,7 @@ export class MysqlDriver implements Driver {
             return "" + defaultValue;
 
         } else if (typeof defaultValue === "boolean") {
-            return defaultValue === true ? "1" : "0";
+            return defaultValue ? "1" : "0";
 
         } else if (typeof defaultValue === "function") {
             return defaultValue();

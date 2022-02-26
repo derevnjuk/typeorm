@@ -2,6 +2,7 @@ import {CommandUtils} from "./CommandUtils";
 import {ObjectLiteral} from "../common/ObjectLiteral";
 import * as path from "path";
 import * as yargs from "yargs";
+
 const chalk = require("chalk");
 
 /**
@@ -39,8 +40,8 @@ export class InitCommand implements yargs.CommandModule {
     async handler(args: yargs.Arguments) {
         try {
             const database: string = args.database as any || "mysql";
-            const isExpress = args.express !== undefined ? true : false;
-            const isDocker = args.docker !== undefined ? true : false;
+            const isExpress = args.express !== undefined;
+            const isDocker = args.docker !== undefined;
             const basePath = process.cwd() + (args.name ? ("/" + args.name) : "");
             const projectName = args.name ? path.basename(args.name as any) : undefined;
             await CommandUtils.createFile(basePath + "/package.json", InitCommand.getPackageJsonTemplate(projectName), false);

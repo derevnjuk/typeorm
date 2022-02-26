@@ -2,6 +2,7 @@ import {createConnection} from "../index";
 import {ConnectionOptionsReader} from "../connection/ConnectionOptionsReader";
 import {Connection} from "../connection/Connection";
 import * as yargs from "yargs";
+
 const chalk = require("chalk");
 
 /**
@@ -53,7 +54,7 @@ export class MigrationRevertCommand implements yargs.CommandModule {
             });
             connection = await createConnection(connectionOptions);
             const options = {
-                transaction: args["t"] === "false" ? false : true
+                transaction: args["t"] !== "false"
             };
             await connection.undoLastMigration(options);
             await connection.close();

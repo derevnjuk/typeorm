@@ -468,15 +468,6 @@ export abstract class QueryBuilder<Entity> {
     }
 
     /**
-     * Indicates if observers must be called before and after query execution.
-     * Enabled by default.
-     */
-    callObservers(enabled: boolean): this {
-        this.expressionMap.callObservers = enabled;
-        return this;
-    }
-
-    /**
      * If set to true the query will be wrapped into a transaction.
      */
     useTransaction(enabled: boolean): this {
@@ -534,7 +525,7 @@ export abstract class QueryBuilder<Entity> {
             });
 
         } else {
-            let subQuery: string = "";
+            let subQuery: string;
             if (entityTarget instanceof Function) {
                 const subQueryBuilder: SelectQueryBuilder<any> = (entityTarget as any)(((this as any) as SelectQueryBuilder<any>).subQuery());
                 this.setParameters(subQueryBuilder.getParameters());
@@ -547,8 +538,8 @@ export abstract class QueryBuilder<Entity> {
             return this.expressionMap.createAlias({
                 type: "from",
                 name: aliasName,
-                tablePath: isSubQuery === false ? entityTarget as string : undefined,
-                subQuery: isSubQuery === true ? subQuery : undefined,
+                tablePath: !isSubQuery ? entityTarget as string : undefined,
+                subQuery: isSubQuery ? subQuery : undefined,
             });
         }
     }

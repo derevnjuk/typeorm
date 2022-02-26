@@ -142,7 +142,7 @@ export class IndexMetadata {
      * Must be called after all entity metadata's properties map, columns and relations are built.
      */
     build(namingStrategy: NamingStrategyInterface): this {
-        if (this.synchronize === false) {
+        if (!this.synchronize) {
             this.name = this.givenName!;
             return this;
         }

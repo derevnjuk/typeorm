@@ -23,7 +23,7 @@ import {UniqueMetadata} from "./UniqueMetadata";
 import {CheckMetadata} from "./CheckMetadata";
 import {QueryRunner} from "..";
 import {ExclusionMetadata} from "./ExclusionMetadata";
-import { shorten } from "../util/StringUtils";
+import {shorten} from "../util/StringUtils";
 
 /**
  * Contains all entity metadata.
@@ -770,7 +770,7 @@ export class EntityMetadata {
         this.database = this.tableMetadataArgs.type === "entity-child" && this.parentEntityMetadata ? this.parentEntityMetadata.database : this.tableMetadataArgs.database;
         this.schema = this.tableMetadataArgs.schema || (this.connection.options as PostgresConnectionOptions|SqlServerConnectionOptions).schema;
         this.givenTableName = this.tableMetadataArgs.type === "entity-child" && this.parentEntityMetadata ? this.parentEntityMetadata.givenTableName : this.tableMetadataArgs.name;
-        this.synchronize = this.tableMetadataArgs.synchronize === false ? false : true;
+        this.synchronize = this.tableMetadataArgs.synchronize !== false;
         this.targetName = this.tableMetadataArgs.target instanceof Function ? (this.tableMetadataArgs.target as any).name : this.tableMetadataArgs.target;
         if (this.tableMetadataArgs.type === "closure-junction") {
             this.tableNameWithoutPrefix = namingStrategy.closureJunctionTableName(this.givenTableName!);

@@ -265,7 +265,7 @@ export class CockroachQueryRunner extends BaseQueryRunner implements QueryRunner
      */
     async hasDatabase(database: string): Promise<boolean> {
         const result = await this.query(`SELECT * FROM "pg_database" WHERE "datname" = '${database}'`);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -273,7 +273,7 @@ export class CockroachQueryRunner extends BaseQueryRunner implements QueryRunner
      */
     async hasSchema(schema: string): Promise<boolean> {
         const result = await this.query(`SELECT * FROM "information_schema"."schemata" WHERE "schema_name" = '${schema}'`);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -283,7 +283,7 @@ export class CockroachQueryRunner extends BaseQueryRunner implements QueryRunner
         const parsedTableName = this.parseTableName(tableOrName);
         const sql = `SELECT * FROM "information_schema"."tables" WHERE "table_schema" = ${parsedTableName.schema} AND "table_name" = ${parsedTableName.tableName}`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -293,7 +293,7 @@ export class CockroachQueryRunner extends BaseQueryRunner implements QueryRunner
         const parsedTableName = this.parseTableName(tableOrName);
         const sql = `SELECT * FROM "information_schema"."columns" WHERE "table_schema" = ${parsedTableName.schema} AND "table_name" = ${parsedTableName.tableName} AND "column_name" = '${columnName}'`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -615,7 +615,7 @@ export class CockroachQueryRunner extends BaseQueryRunner implements QueryRunner
                 downQueries.push(`ALTER TABLE ${this.escapeTableName(table)} RENAME COLUMN "${newColumn.name}" TO "${oldColumn.name}"`);
 
                 // rename column primary key constraint
-                if (oldColumn.isPrimary === true) {
+                if (oldColumn.isPrimary) {
                     const primaryColumns = clonedTable.primaryColumns;
 
                     // build old primary constraint name
@@ -718,7 +718,7 @@ export class CockroachQueryRunner extends BaseQueryRunner implements QueryRunner
                     downQueries.push(`ALTER TABLE ${this.escapeTableName(table)} ADD CONSTRAINT "${pkName}" PRIMARY KEY (${columnNames})`);
                 }
 
-                if (newColumn.isPrimary === true) {
+                if (newColumn.isPrimary) {
                     primaryColumns.push(newColumn);
                     // update column in table
                     const column = clonedTable.columns.find(column => column.name === newColumn.name);

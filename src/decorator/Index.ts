@@ -72,13 +72,13 @@ export function Index(nameOrFieldsOrOptions?: string|string[]|((object: any) => 
             target: propertyName ? clsOrObject.constructor : clsOrObject as Function,
             name: name,
             columns: propertyName ? [propertyName] : fields,
-            synchronize: options && (options as { synchronize: false }).synchronize === false ? false : true,
+            synchronize: !(options && !(options as { synchronize: false }).synchronize),
             where: options ? options.where : undefined,
-            unique: options && options.unique ? true : false,
-            spatial: options && options.spatial ? true : false,
-            fulltext: options && options.fulltext ? true : false,
-            sparse: options && options.sparse ? true : false,
-            background: options && options.background ? true : false,
+            unique: !!(options && options.unique),
+            spatial: !!(options && options.spatial),
+            fulltext: !!(options && options.fulltext),
+            sparse: !!(options && options.sparse),
+            background: !!(options && options.background),
             expireAfterSeconds: options && options.expireAfterSeconds != null ? options.expireAfterSeconds : undefined
         } as IndexMetadataArgs);
     };

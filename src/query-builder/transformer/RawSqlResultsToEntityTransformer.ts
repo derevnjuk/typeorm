@@ -37,9 +37,7 @@ export class RawSqlResultsToEntityTransformer {
      * we need to group our result and we must have some unique id (primary key in our case)
      */
     transform(rawResults: any[], alias: Alias): any[] {
-        // console.time("grouping");
         const group = this.group(rawResults, alias);
-        // console.timeEnd("grouping");
         const entities: any[] = [];
         group.forEach(results => {
             const entity = this.transformRawResultsGroup(results, alias);
@@ -104,7 +102,7 @@ export class RawSqlResultsToEntityTransformer {
         // if we don't have any selected column we should not return entity,
         // except for the case when entity only contain a primary column as a relation to another entity
         // in this case its absolutely possible our entity to not have any columns except a single relation
-        const hasOnlyVirtualPrimaryColumns = metadata.primaryColumns.filter(column => column.isVirtual === false).length === 0; // todo: create metadata.hasOnlyVirtualPrimaryColumns
+        const hasOnlyVirtualPrimaryColumns = metadata.primaryColumns.filter(column => !column.isVirtual).length === 0; // todo: create metadata.hasOnlyVirtualPrimaryColumns
         if (hasOnlyVirtualPrimaryColumns && (hasRelations || hasRelationIds || hasRelationCounts))
             return entity;
 
@@ -117,7 +115,7 @@ export class RawSqlResultsToEntityTransformer {
         metadata.columns.forEach(column => {
 
             // if table inheritance is used make sure this column is not child's column
-            if (metadata.childEntityMetadatas.length > 0 && metadata.childEntityMetadatas.map(metadata => metadata.target).indexOf(column.target) !== -1)
+            if (metadata.childEntityMetadatas.length > 0 && metadata.childEntityMetadatas.findIndex(childMetadata => childMetadata.target === column.target) !== -1)
                 return;
 
             const value = rawResults[0][DriverUtils.buildColumnAlias(this.driver, alias.name, column.databaseName)];
@@ -162,11 +160,9 @@ export class RawSqlResultsToEntityTransformer {
                 return;
 
             // some checks to make sure this join is for current alias
-            if (join.mapToProperty) {
-                if (join.mapToPropertyParentAlias !== alias.name)
+            if (join.mapToProperty && join.mapToPropertyParentAlias !== alias.name) {
                     return;
-            } else {
-                if (!join.relation || join.parentAlias !== alias.name || join.relationPropertyPath !== join.relation!.propertyPath)
+            } else if (!join.relation || join.parentAlias !== alias.name || join.relationPropertyPath !== join.relation!.propertyPath) {
                     return;
             }
 
@@ -203,7 +199,7 @@ export class RawSqlResultsToEntityTransformer {
 
             const idMaps = rawRelationIdResult.results.map(result => {
                 const entityPrimaryIds = this.extractEntityPrimaryIds(relation, result);
-                if (EntityMetadata.compareIds(entityPrimaryIds, valueMap) === false)
+                if (!EntityMetadata.compareIds(entityPrimaryIds, valueMap))
                     return;
 
                 let columns: ColumnMetadata[];
@@ -235,7 +231,7 @@ export class RawSqlResultsToEntityTransformer {
                     }
                 }, {} as ObjectLiteral);
 
-                if (columns.length === 1 && rawRelationIdResult.relationIdAttribute.disableMixedMap === false) {
+                if (columns.length === 1 && !rawRelationIdResult.relationIdAttribute.disableMixedMap) {
                     if (relation.isOneToMany || relation.isOneToOneNotOwner) {
                         return columns[0].getEntityValue(idMap);
                     } else {

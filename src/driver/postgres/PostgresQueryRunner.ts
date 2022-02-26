@@ -243,7 +243,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
      */
     async hasSchema(schema: string): Promise<boolean> {
         const result = await this.query(`SELECT * FROM "information_schema"."schemata" WHERE "schema_name" = '${schema}'`);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -253,7 +253,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
         const parsedTableName = this.parseTableName(tableOrName);
         const sql = `SELECT * FROM "information_schema"."tables" WHERE "table_schema" = ${parsedTableName.schema} AND "table_name" = ${parsedTableName.tableName}`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -263,7 +263,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
         const parsedTableName = this.parseTableName(tableOrName);
         const sql = `SELECT * FROM "information_schema"."columns" WHERE "table_schema" = ${parsedTableName.schema} AND "table_name" = ${parsedTableName.tableName} AND "column_name" = '${columnName}'`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -585,7 +585,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
                 }
 
                 // rename column primary key constraint
-                if (oldColumn.isPrimary === true) {
+                if (oldColumn.isPrimary) {
                     const primaryColumns = clonedTable.primaryColumns;
 
                     // build old primary constraint name
@@ -604,7 +604,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
                 }
 
                 // rename column sequence
-                if (oldColumn.isGenerated === true && newColumn.generationStrategy === "increment") {
+                if (oldColumn.isGenerated && newColumn.generationStrategy === "increment") {
                     const schema = this.extractSchema(table);
 
                     // building sequence name. Sequence without schema needed because it must be supplied in RENAME TO without
@@ -747,7 +747,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
                     downQueries.push(`ALTER TABLE ${this.escapeTableName(table)} ADD CONSTRAINT "${pkName}" PRIMARY KEY (${columnNames})`);
                 }
 
-                if (newColumn.isPrimary === true) {
+                if (newColumn.isPrimary) {
                     primaryColumns.push(newColumn);
                     // update column in table
                     const column = clonedTable.columns.find(column => column.name === newColumn.name);
@@ -776,7 +776,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
             }
 
             if (newColumn.isUnique !== oldColumn.isUnique) {
-                if (newColumn.isUnique === true) {
+                if (newColumn.isUnique) {
                     const uniqueConstraint = new TableUnique({
                         name: this.connection.namingStrategy.uniqueConstraintName(table.name, [newColumn.name]),
                         columnNames: [newColumn.name]
@@ -796,7 +796,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
             }
 
             if (oldColumn.isGenerated !== newColumn.isGenerated && newColumn.generationStrategy !== "uuid") {
-                if (newColumn.isGenerated === true) {
+                if (newColumn.isGenerated) {
                     upQueries.push(`CREATE SEQUENCE ${this.buildSequenceName(table, newColumn)} OWNED BY ${this.escapeTableName(table)}."${newColumn.name}"`);
                     downQueries.push(`DROP SEQUENCE ${this.buildSequenceName(table, newColumn)}`);
 
@@ -1694,7 +1694,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
             `INNER JOIN "pg_namespace" "n" ON "n"."oid" = "t"."typnamespace" ` +
             `WHERE "n"."nspname" = ${schema} AND "t"."typname" = '${enumName}'`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -1836,7 +1836,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
     protected buildSequenceName(table: Table, columnOrName: TableColumn|string, currentSchema?: string, disableEscape?: true, skipSchema?: boolean): string {
         const columnName = columnOrName instanceof TableColumn ? columnOrName.name : columnOrName;
         let schema: string|undefined = undefined;
-        let tableName: string|undefined = undefined;
+        let tableName: string|undefined;
 
         if (table.name.indexOf(".") === -1) {
             tableName = table.name;
@@ -1903,7 +1903,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
      */
     protected buildCreateColumnSql(table: Table, column: TableColumn) {
         let c = "\"" + column.name + "\"";
-        if (column.isGenerated === true && column.generationStrategy !== "uuid") {
+        if (column.isGenerated && column.generationStrategy !== "uuid") {
             if (column.type === "integer" || column.type === "int" || column.type === "int4")
                 c += " SERIAL";
             if (column.type === "smallint" || column.type === "int2")
@@ -1923,7 +1923,7 @@ export class PostgresQueryRunner extends BaseQueryRunner implements QueryRunner 
             c += " CHARACTER SET \"" + column.charset + "\"";
         if (column.collation)
             c += " COLLATE \"" + column.collation + "\"";
-        if (column.isNullable !== true)
+        if (!column.isNullable)
             c += " NOT NULL";
         if (column.default !== undefined && column.default !== null)
             c += " DEFAULT " + column.default;

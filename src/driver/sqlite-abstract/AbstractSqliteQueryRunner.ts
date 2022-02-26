@@ -94,7 +94,7 @@ export abstract class AbstractSqliteQueryRunner extends BaseQueryRunner implemen
             }
         }
 
-        if ((this.connection.options as SqliteConnectionOptions).enableWAL === true) {
+        if ((this.connection.options as SqliteConnectionOptions).enableWAL) {
             await this.query("PRAGMA journal_mode = WAL");
         }
 
@@ -168,7 +168,7 @@ export abstract class AbstractSqliteQueryRunner extends BaseQueryRunner implemen
         const tableName = tableOrName instanceof Table ? tableOrName.name : tableOrName;
         const sql = `SELECT * FROM "sqlite_master" WHERE "type" = 'table' AND "name" = '${tableName}'`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -1002,11 +1002,11 @@ export abstract class AbstractSqliteQueryRunner extends BaseQueryRunner implemen
             c += " CHECK( " + column.name + " IN (" + column.enum.map(val => "'" + val + "'").join(",") + ") )";
         if (column.isPrimary && !skipPrimary)
             c += " PRIMARY KEY";
-        if (column.isGenerated === true && column.generationStrategy === "increment") // don't use skipPrimary here since updates can update already exist primary without auto inc.
+        if (column.isGenerated && column.generationStrategy === "increment") // don't use skipPrimary here since updates can update already exist primary without auto inc.
             c += " AUTOINCREMENT";
         if (column.collation)
             c += " COLLATE " + column.collation;
-        if (column.isNullable !== true)
+        if (!column.isNullable)
             c += " NOT NULL";
         if (column.default !== undefined && column.default !== null)
             c += " DEFAULT (" + column.default + ")";

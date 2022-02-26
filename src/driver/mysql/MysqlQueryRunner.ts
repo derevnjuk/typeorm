@@ -215,7 +215,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
      */
     async hasDatabase(database: string): Promise<boolean> {
         const result = await this.query(`SELECT * FROM \`INFORMATION_SCHEMA\`.\`SCHEMATA\` WHERE \`SCHEMA_NAME\` = '${database}'`);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -232,7 +232,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
         const parsedTableName = this.parseTableName(tableOrName);
         const sql = `SELECT * FROM \`INFORMATION_SCHEMA\`.\`COLUMNS\` WHERE \`TABLE_SCHEMA\` = '${parsedTableName.database}' AND \`TABLE_NAME\` = '${parsedTableName.tableName}'`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -243,7 +243,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
         const columnName = column instanceof TableColumn ? column.name : column;
         const sql = `SELECT * FROM \`INFORMATION_SCHEMA\`.\`COLUMNS\` WHERE \`TABLE_SCHEMA\` = '${parsedTableName.database}' AND \`TABLE_NAME\` = '${parsedTableName.tableName}' AND \`COLUMN_NAME\` = '${columnName}'`;
         const result = await this.query(sql);
-        return result.length ? true : false;
+        return !!result.length;
     }
 
     /**
@@ -625,7 +625,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
                     downQueries.push(`ALTER TABLE ${this.escapeTableName(table)} ADD PRIMARY KEY (${columnNames})`);
                 }
 
-                if (newColumn.isPrimary === true) {
+                if (newColumn.isPrimary) {
                     primaryColumns.push(newColumn);
                     // update column in table
                     const column = clonedTable.columns.find(column => column.name === newColumn.name);
@@ -661,7 +661,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
             }
 
             if (newColumn.isUnique !== oldColumn.isUnique) {
-                if (newColumn.isUnique === true) {
+                if (newColumn.isUnique) {
                     const uniqueIndex = new TableIndex({
                         name: this.connection.namingStrategy.indexName(table.name, [newColumn.name]),
                         columnNames: [newColumn.name],
@@ -677,7 +677,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
 
                 } else {
                     const uniqueIndex = clonedTable.indices.find(index => {
-                        return index.columnNames.length === 1 && index.isUnique === true && !!index.columnNames.find(columnName => columnName === newColumn.name);
+                        return index.columnNames.length === 1 && index.isUnique && !!index.columnNames.find(columnName => columnName === newColumn.name);
                     });
                     clonedTable.indices.splice(clonedTable.indices.indexOf(uniqueIndex!), 1);
 
@@ -1208,7 +1208,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
 
                     const tableMetadata = this.connection.entityMetadatas.find(metadata => metadata.tablePath === table.name);
                     const hasIgnoredIndex = columnUniqueIndex && tableMetadata && tableMetadata.indices
-                        .some(index => index.name === columnUniqueIndex["INDEX_NAME"] && index.synchronize === false);
+                        .some(index => !index.synchronize);
 
                     const isConstraintComposite = columnUniqueIndex
                         ? !!dbIndices.find(dbIndex => dbIndex["INDEX_NAME"] === columnUniqueIndex["INDEX_NAME"] && dbIndex["COLUMN_NAME"] !== dbColumn["COLUMN_NAME"])
@@ -1349,7 +1349,7 @@ export class MysqlQueryRunner extends BaseQueryRunner implements QueryRunner {
             .filter(column => column.isUnique)
             .forEach(column => {
                 const isUniqueIndexExist = table.indices.some(index => {
-                    return index.columnNames.length === 1 && !!index.isUnique && index.columnNames.indexOf(column.name) !== -1;
+                    return index.columnNames.length === 1 && index.isUnique && index.columnNames.indexOf(column.name) !== -1;
                 });
                 const isUniqueConstraintExist = table.uniques.some(unique => {
                     return unique.columnNames.length === 1 && unique.columnNames.indexOf(column.name) !== -1;
