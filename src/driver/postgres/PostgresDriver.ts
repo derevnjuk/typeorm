@@ -302,7 +302,7 @@ export class PostgresDriver implements Driver {
         });
         if (hasUuidColumns || hasCitextColumns || hasHstoreColumns || hasGeometryColumns || hasExclusionConstraints) {
             await Promise.all([this.master, ...this.slaves].map(pool => {
-                return new Promise((ok, fail) => {
+                return new Promise<void>((ok, fail) => {
                     pool.connect(async (err: any, connection: any, release: Function) => {
                         const { logger } = this.connection;
                         if (err) return fail(err);

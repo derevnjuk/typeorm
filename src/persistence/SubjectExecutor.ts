@@ -263,7 +263,6 @@ export class SubjectExecutor {
                         .values(bulkInsertMaps)
                         .updateEntity(this.options && this.options.reload === false ? false : true)
                         .callListeners(false)
-                        .callObservers(false)
                         .execute();
 
                     bulkInsertSubjects.forEach((subject, index) => {
@@ -290,7 +289,6 @@ export class SubjectExecutor {
                             .values(subject.insertedValueSet)
                             .updateEntity(this.options && this.options.reload === false ? false : true)
                             .callListeners(false)
-                            .callObservers(false)
                             .execute()
                             .then(insertResult => {
                                 subject.identifier = insertResult.identifiers[0];
@@ -364,8 +362,7 @@ export class SubjectExecutor {
                     .update(subject.metadata.target)
                     .set(updateMap)
                     .updateEntity(this.options && this.options.reload === false ? false : true)
-                    .callListeners(false)
-                    .callObservers(false);
+                    .callListeners(false);
 
                 if (subject.entity) {
                     updateQueryBuilder.whereEntity(subject.identifier);
@@ -437,7 +434,6 @@ export class SubjectExecutor {
                     .from(subjects[0].metadata.target)
                     .where(deleteMaps)
                     .callListeners(false)
-                    .callObservers(false)
                     .execute();
             }
         });

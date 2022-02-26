@@ -1,5 +1,4 @@
 import {normalizeFindOptions} from "../find-options/FindOptionsUtils";
-import {ObserverExecutor} from "../observer/ObserverExecutor";
 import {QueryBuilderUtils} from "./QueryBuilderUtils";
 import {RawSqlResultsToEntityTransformer} from "./transformer/RawSqlResultsToEntityTransformer";
 import {ObjectLiteral} from "../common/ObjectLiteral";
@@ -14,7 +13,9 @@ import {RelationCountAttribute} from "./relation-count/RelationCountAttribute";
 import {RelationIdLoader} from "./relation-id/RelationIdLoader";
 import {RelationIdMetadataToAttributeTransformer} from "./relation-id/RelationIdMetadataToAttributeTransformer";
 import {RelationCountLoader} from "./relation-count/RelationCountLoader";
-import {RelationCountMetadataToAttributeTransformer} from "./relation-count/RelationCountMetadataToAttributeTransformer";
+import {
+  RelationCountMetadataToAttributeTransformer
+} from "./relation-count/RelationCountMetadataToAttributeTransformer";
 import {QueryBuilder} from "./QueryBuilder";
 import {ReadStream} from "../platform/PlatformTools";
 import {LockNotSupportedOnGivenDriverError} from "../error/LockNotSupportedOnGivenDriverError";
@@ -36,10 +37,11 @@ import {OffsetWithoutLimitNotSupportedError} from "../error/OffsetWithoutLimitNo
 import {BroadcasterResult} from "../subscriber/BroadcasterResult";
 import {SelectQueryBuilderOption} from "./SelectQueryBuilderOption";
 import {
-    FindOptions,
-    FindOptionsOrder, FindOptionsRelation,
-    FindOptionsSelect,
-    FindOptionsWhere
+  FindOptions,
+  FindOptionsOrder,
+  FindOptionsRelation,
+  FindOptionsSelect,
+  FindOptionsWhere
 } from "../find-options/FindOptions";
 import {RelationMetadata} from "../metadata/RelationMetadata";
 import {FindCriteriaNotFoundError} from "../error/FindCriteriaNotFoundError";
@@ -1073,8 +1075,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1117,8 +1117,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1200,8 +1198,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1250,8 +1246,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1298,8 +1292,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs) {
                 await queryRunner.commitTransaction();
-                if (this.expressionMap.callObservers)
-                    await new ObserverExecutor(this.connection.observers).execute();
             }
 
             return results;
@@ -1924,9 +1916,6 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
                 if (this.findOptions.options.listeners === false)
                     this.callListeners(false);
 
-                if (this.findOptions.options.observers === false)
-                    this.callObservers(false);
-
                 if (this.findOptions.options.loadRelationIds === true) {
                     this.loadAllRelationIds();
 
@@ -2083,9 +2072,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             }
 
         } else {
-            // console.time("load raw results");
             rawResults = await this.loadRawResults(queryRunner);
-            // console.timeEnd("load raw results");
         }
 
         if (rawResults.length > 0) {
@@ -2094,9 +2081,7 @@ export class SelectQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             const rawRelationIdResults = await relationIdLoader.load(rawResults);
             const rawRelationCountResults = await relationCountLoader.load(rawResults);
             const transformer = new RawSqlResultsToEntityTransformer(this.expressionMap, this.connection.driver, rawRelationIdResults, rawRelationCountResults, this.queryRunner);
-            // console.time("transforming entities");
             entities = transformer.transform(rawResults, this.expressionMap.mainAlias!);
-            // console.timeEnd("transforming entities");
 
             // broadcast all "after load" events
             if (this.expressionMap.callListeners === true && this.expressionMap.mainAlias.hasMetadata) {

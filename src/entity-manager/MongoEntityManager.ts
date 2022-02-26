@@ -44,8 +44,8 @@ import {DocumentToEntityTransformer} from "../query-builder/transformer/Document
 import {FindOptionsUtils} from "../find-options/FindOptionsUtils";
 import {PlatformTools} from "../platform/PlatformTools";
 import {QueryDeepPartialEntity} from "../query-builder/QueryPartialEntity";
-import {InsertResult } from "../query-builder/result/InsertResult";
-import { UpdateResult } from "../query-builder/result/UpdateResult";
+import {InsertResult} from "../query-builder/result/InsertResult";
+import {UpdateResult} from "../query-builder/result/UpdateResult";
 import {DeleteResult} from "../query-builder/result/DeleteResult";
 import {EntityMetadata} from "../metadata/EntityMetadata";
 import {EntitySchema, FindExtraOptions, FindOptionsSelect} from "../index";
@@ -75,6 +75,7 @@ export class MongoEntityManager extends EntityManager {
     /**
      * Gets query runner used to execute queries.
      */
+    // @ts-ignore
     get queryRunner(): MongoQueryRunner {
         return (this.connection.driver as MongoDriver).queryRunner!;
     }

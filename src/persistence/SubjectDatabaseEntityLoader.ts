@@ -34,8 +34,6 @@ export class SubjectDatabaseEntityLoader {
         // we are grouping subjects by target to perform more optimized queries using WHERE IN operator
         // go through the groups and perform loading of database entities of each subject in the group
         const promises = this.groupByEntityTargets().map(async subjectGroup => {
-            // console.time("start loading");
-
             // prepare entity ids of the subjects we need to load
             const allIds: ObjectLiteral[] = [];
             const allSubjects: Subject[] = [];
@@ -83,7 +81,6 @@ export class SubjectDatabaseEntityLoader {
             const findOptions: FindOptions<any> = {
                 options: {
                     listeners: false,
-                    observers: false,
                     eagerRelations: false,
                     loadRelationIds: {
                         relations: loadRelationPropertyPaths,
@@ -93,11 +90,9 @@ export class SubjectDatabaseEntityLoader {
             };
 
             // load database entities for all given ids
-            // console.time("loading findByIds");
             const entities = await this.queryRunner.manager
                 .getRepository<ObjectLiteral>(subjectGroup.target)
                 .findByIds(allIds, findOptions);
-            // console.timeEnd("loading findByIds");
 
             // now when we have entities we need to find subject of each entity
             // and insert that entity into database entity of the found subjects
@@ -114,8 +109,6 @@ export class SubjectDatabaseEntityLoader {
             for (let subject of allSubjects) {
                 subject.databaseEntityLoaded = true;
             }
-
-            // console.timeEnd("start loading");
         });
 
         await Promise.all(promises);

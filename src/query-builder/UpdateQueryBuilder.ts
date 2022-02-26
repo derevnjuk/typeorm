@@ -1,5 +1,4 @@
 import {CockroachDriver} from "../driver/cockroachdb/CockroachDriver";
-import {ObserverExecutor} from "../observer/ObserverExecutor";
 import {QueryBuilder} from "./QueryBuilder";
 import {ObjectLiteral} from "../common/ObjectLiteral";
 import {Connection} from "../connection/Connection";
@@ -113,14 +112,6 @@ export class UpdateQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs)
                 await queryRunner.commitTransaction();
-
-            // second case is when operation is executed without transaction and at the same time
-            // nobody started transaction from the above
-            if (this.expressionMap.callObservers) {
-                if (transactionStartedByUs || (this.expressionMap.useTransaction === false && queryRunner.isTransactionActive === false)) {
-                    await new ObserverExecutor(this.connection.observers).execute();
-                }
-            }
 
             return updateResult;
 

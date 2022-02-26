@@ -14,8 +14,7 @@ import {SqljsDriver} from "../driver/sqljs/SqljsDriver";
 import {MysqlDriver} from "../driver/mysql/MysqlDriver";
 import {BroadcasterResult} from "../subscriber/BroadcasterResult";
 import {EntitySchema} from "../index";
-import {ObserverExecutor} from "../observer/ObserverExecutor";
-import { OracleDriver } from "../driver/oracle/OracleDriver";
+import {OracleDriver} from "../driver/oracle/OracleDriver";
 
 /**
  * Allows to build complex sql queries in a fashion way and execute those queries.
@@ -95,14 +94,6 @@ export class DeleteQueryBuilder<Entity> extends QueryBuilder<Entity> implements 
             // close transaction if we started it
             if (transactionStartedByUs)
                 await queryRunner.commitTransaction();
-
-            // second case is when operation is executed without transaction and at the same time
-            // nobody started transaction from the above
-            if (this.expressionMap.callObservers) {
-                if (transactionStartedByUs || (this.expressionMap.useTransaction === false && queryRunner.isTransactionActive === false)) {
-                    await new ObserverExecutor(this.connection.observers).execute();
-                }
-            }
 
             return deleteResult;
 

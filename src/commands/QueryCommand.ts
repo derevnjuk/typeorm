@@ -4,6 +4,7 @@ import {ConnectionOptionsReader} from "../connection/ConnectionOptionsReader";
 import {Connection} from "../connection/Connection";
 import {PlatformTools} from "../platform/PlatformTools";
 import * as yargs from "yargs";
+
 const chalk = require("chalk");
 
 /**
@@ -49,8 +50,8 @@ export class QueryCommand implements yargs.CommandModule {
 
             // create a query runner and execute query using it
             queryRunner = connection.createQueryRunner("master");
-            console.log(chalk.green("Running query: ") + PlatformTools.highlightSql(args._[1]));
-            const queryResult = await queryRunner.query(args._[1]);
+            console.log(chalk.green("Running query: ") + PlatformTools.highlightSql(args._[1] as string));
+            const queryResult = await queryRunner.query(args._[1] as string);
             console.log(chalk.green("Query has been executed. Result: "));
             console.log(PlatformTools.highlightJson(JSON.stringify(queryResult, undefined, 2)));
 

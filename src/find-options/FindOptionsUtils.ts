@@ -86,7 +86,7 @@ export function normalizeFindOptions<T>(options: FindOptions<T>): FindOptions<T>
         return false;
     };
 
-    const recursivelyWhere = <T extends any>(where: T): T => {
+    const recursivelyWhere = (where: any): any => {
 
         if (Array.isArray(where))
             return where.map((where: any) => recursivelyWhere(where));
@@ -104,17 +104,8 @@ export function normalizeFindOptions<T>(options: FindOptions<T>): FindOptions<T>
                 newWhere[key] = where[key];
             }
             return newWhere;
-        }, {} as T);
+        }, {} as any);
     };
-
-    // todo: broken after merge
-    // if (options.lock) {
-    //     if (options.lock.mode === "optimistic") {
-    //         qb.setLock(options.lock.mode, options.lock.version as any);
-    //     } else if (options.lock.mode === "pessimistic_read" || options.lock.mode === "pessimistic_write") {
-    //         qb.setLock(options.lock.mode);
-    //     }
-    // }
 
     return { ...options, where: recursivelyWhere(options.where!) };
 }

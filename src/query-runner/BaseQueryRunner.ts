@@ -88,7 +88,7 @@ export abstract class BaseQueryRunner {
     // Protected Abstract Methods
     // -------------------------------------------------------------------------
 
-    protected abstract async loadTables(tablePaths: string[]): Promise<Table[]>;
+    protected abstract loadTables(tablePaths: string[]): Promise<Table[]>;
 
     // -------------------------------------------------------------------------
     // Public Methods

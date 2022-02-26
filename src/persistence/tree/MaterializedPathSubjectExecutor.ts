@@ -50,7 +50,6 @@ export class MaterializedPathSubjectExecutor {
                 [subject.metadata.materializedPathColumn!.propertyPath]: parentPath + insertedEntityId + "."
             } as any)
             .where(subject.identifier!)
-            .callObservers(false)
             .callListeners(false)
             .execute();
     }
